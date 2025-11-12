@@ -1,0 +1,30 @@
+# Docker-optimized requirements (without Airflow)
+# Core Model Pipeline Dependencies Only
+
+# Data Processing
+pandas
+numpy
+pyyaml
+
+# Model Development
+sentence-transformers
+chromadb
+openai
+langchain
+langchain-community
+faiss-cpu
+rank-bm25
+
+# Experiment Tracking
+mlflow
+datasets
+
+# Evaluation
+ragas
+
+# Testing
+pytest
+tqdm
+
+# Google Cloud (optional)
+google-cloud-storage

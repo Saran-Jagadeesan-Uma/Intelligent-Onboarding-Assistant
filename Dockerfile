@@ -11,16 +11,18 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     git \
+    libre2-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-docker.txt .
+RUN pip install --no-cache-dir -r requirements-docker.txt
 
 COPY src/ ./src/
 COPY models/ ./models/
 COPY data/ ./data/
 COPY experiments/ ./experiments/
-COPY test_pipeline.py ..
+COPY test_pipeline.py .
 
 RUN mkdir -p models/embeddings models/vector_store models/registry experiments/mlruns
 

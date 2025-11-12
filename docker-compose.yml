@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   model-pipeline:
     build:
@@ -12,23 +10,10 @@ services:
       - ./experiments:/app/experiments
     environment:
       - PYTHONUNBUFFERED=1
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY} 
-    command: python test_pipeline.py  # CHANGE FROM test_pipeline.py
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    command: python test_pipeline.py
     networks:
       - onboarding-net
-  
-  # Future: API service
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8000:8000"
-  #   volumes:
-  #     - ./models:/app/models
-  #   command: python -m src.api.main
-  #   networks:
-  #     - onboarding-net
 
 networks:
   onboarding-net:

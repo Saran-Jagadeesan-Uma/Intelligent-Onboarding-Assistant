@@ -1,5 +1,5 @@
-# Docker-optimized requirements (without Airflow)
-# Core Model Pipeline Dependencies Only
+# Docker-optimized requirements
+# Optimized for Model Development Pipeline
 
 # Data Processing
 pandas
@@ -9,39 +9,10 @@ pyyaml
 # Model Development
 sentence-transformers
 chromadb
-openai
-langchain
-langchain-community
 faiss-cpu
 rank-bm25
 
-# Experiment Tracking
-mlflow
-datasets
-
-# Evaluation
-ragas
-
-# Testing
-pytest
-tqdm
-
-# Google Cloud (optional)
-google-cloud-storage
-
-# Docker-optimized requirements
-
-# Data Processing
-pandas
-numpy
-
-# Model Development
-sentence-transformers
-chromadb
-faiss-cpu
-rank-bm25
-
-# LLM Integration
+# LLM Integration (Gemini + OpenAI support)
 google-generativeai
 openai
 python-dotenv
@@ -50,16 +21,15 @@ python-dotenv
 mlflow
 datasets
 
-# Evaluation
+# Evaluation Framework
 ragas
+langchain
+langchain-community
 
 # Testing
 pytest
+pytest-cov
 tqdm
 
-# Google Cloud (optional)
+# Google Cloud Storage
 google-cloud-storage
-
-# Langchain (for RAGAS)
-langchain
-langchain-community

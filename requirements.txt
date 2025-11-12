@@ -33,3 +33,4 @@ mlflow
 ragas
 datasets
 tqdm
+python-dotenv

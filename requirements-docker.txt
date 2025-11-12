@@ -28,3 +28,38 @@ tqdm
 
 # Google Cloud (optional)
 google-cloud-storage
+
+# Docker-optimized requirements
+
+# Data Processing
+pandas
+numpy
+
+# Model Development
+sentence-transformers
+chromadb
+faiss-cpu
+rank-bm25
+
+# LLM Integration
+google-generativeai
+openai
+python-dotenv
+
+# Experiment Tracking
+mlflow
+datasets
+
+# Evaluation
+ragas
+
+# Testing
+pytest
+tqdm
+
+# Google Cloud (optional)
+google-cloud-storage
+
+# Langchain (for RAGAS)
+langchain
+langchain-community

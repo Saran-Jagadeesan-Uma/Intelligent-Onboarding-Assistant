@@ -12,7 +12,8 @@ services:
       - ./experiments:/app/experiments
     environment:
       - PYTHONUNBUFFERED=1
-    command: python test_pipeline.py
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY} 
+    command: python test_pipeline.py  # CHANGE FROM test_pipeline.py
     networks:
       - onboarding-net
   

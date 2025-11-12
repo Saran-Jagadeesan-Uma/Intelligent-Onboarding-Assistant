@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.generation.gemini_rag_pipeline import GeminiRAGPipeline
+from src.generation.rag_pipeline import rag_pipeline as GeminiRAGPipeline
 
 # Page configuration
 st.set_page_config(

@@ -36,27 +36,42 @@ Open: http://localhost:5000
 
 ---
 
-## Option 2: Run With OpenAI (Full RAG) 🤖
+## Option 2: Run With LLM Generation (Full RAG) 🤖
 
-### Step 1: Get API Key
-Visit: https://platform.openai.com/api-keys
+### Recommended: Google Gemini (FREE!) ⭐
 
-### Step 2: Set Environment Variable
+**Step 1: Get Free API Key**
+Visit: https://aistudio.google.com/app/apikey
 
-**Windows PowerShell:**
-```powershell
-$env:OPENAI_API_KEY="your-key-here"
+**Step 2: Create .env file**
+Create file `.env` in project root:
+```
+GOOGLE_API_KEY=your-key-here
 ```
 
-**Windows CMD:**
-```cmd
-set OPENAI_API_KEY=your-key-here
-```
-
-**Mac/Linux:**
+**Step 3: Run RAG Pipeline**
 ```bash
-export OPENAI_API_KEY=your-key-here
+python -m src.generation.rag_pipeline
 ```
+
+**This will generate actual answers using Gemini 2.0 - completely FREE!**
+
+---
+
+### Alternative: OpenAI (Paid)
+
+If you prefer OpenAI ($5 minimum):
+
+**Step 1:** Get key from https://platform.openai.com/api-keys
+
+**Step 2:** Add to `.env`:
+```
+OPENAI_API_KEY=your-key-here
+```
+
+**Step 3:** Modify provider in code to use OpenAI
+
+**Cost:** ~$0.002 per query with GPT-3.5-turbo
 
 ### Step 3: Run RAG Pipeline
 ```bash

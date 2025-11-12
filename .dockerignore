@@ -1,109 +1,37 @@
-# Intelligent Onboarding Assistant - Model Pipeline
-FROM python:3.9-slim
-
-# Set working directory
-WORKDIR /app
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy project files
-COPY src/ ./src/
-COPY models/ ./models/
-COPY data/ ./data/
-COPY experiments/ ./experiments/
-COPY tests/ ./tests/
-COPY test_pipeline.py .
-COPY README.md .
-
-# Create necessary directories
-RUN mkdir -p models/embeddings models/vector_store models/registry experiments/mlruns
-
-# Expose port for potential API (future use)
-EXPOSE 8000
-
-# Set Python path
-ENV PYTHONPATH=/app
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)"
-
-# Default command: run tests
-CMD ["python", "test_pipeline.py"]
-```
-
-**Save as:** `Dockerfile`
-
----
-
-### **Step 2: Create .dockerignore**
-
-**Open Notepad, copy this:**
-```
 # Git
 .git
 .gitignore
 .github
 
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+__pycache__
+*.pyc
+*.pyo
+*.pyd
 .Python
-env/
-venv/
-ENV/
-*.egg-info/
-dist/
-build/
+env
+venv
+*.egg-info
+dist
+build
 
 # IDE
-.vscode/
-.idea/
+.vscode
+.idea
 *.swp
-*.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Project specific
+# Logs
 *.log
-.dvc/
-models/vector_store/chroma.sqlite3
-experiments/mlruns/*
 
-# Documentation
-docs/
-*.md
-!README.md
-
-# Test files
-.pytest_cache/
+# Test cache
+.pytest_cache
 .coverage
-htmlcov/
 
 # Large files
-*.avi
 *.mp4
 *.zip
 *.tar.gz

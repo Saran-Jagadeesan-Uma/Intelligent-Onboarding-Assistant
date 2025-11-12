@@ -20,9 +20,7 @@ COPY src/ ./src/
 COPY models/ ./models/
 COPY data/ ./data/
 COPY experiments/ ./experiments/
-COPY tests/ ./tests/
-COPY test_pipeline.py .
-COPY README.md .
+COPY test_pipeline.py ..
 
 RUN mkdir -p models/embeddings models/vector_store models/registry experiments/mlruns
 

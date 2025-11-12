@@ -1,3 +1,9 @@
+"""
+Universal RAG Pipeline
+Supports both OpenAI and Google Gemini (recommended: Gemini - FREE!)
+"""
+
+import google.generativeai as genai
 from openai import OpenAI
 import os
 from typing import List, Dict, Optional
@@ -5,97 +11,101 @@ import logging
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from retrieval.retriever import BaselineRetriever
+from retrieval.advanced_retriever import AdvancedRetriever
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class RAGPipeline:
+class UniversalRAGPipeline:
+    """RAG Pipeline supporting multiple LLM providers"""
+    
     def __init__(self, 
+                 provider: str = "gemini",  # "gemini" or "openai"
                  api_key: Optional[str] = None,
-                 model: str = "gpt-3.5-turbo",
+                 model: Optional[str] = None,
                  temperature: float = 0.3):
         """
-        Initialize RAG pipeline with retriever and LLM
+        Initialize Universal RAG pipeline
         
         Args:
-            api_key: OpenAI API key (or set OPENAI_API_KEY env variable)
-            model: OpenAI model name
-            temperature: Generation temperature (0-1)
+            provider: "gemini" (free, recommended) or "openai" (paid)
+            api_key: API key (or use environment variables)
+            model: Model name (auto-selected if None)
+            temperature: Generation temperature
         """
-        logger.info("Initializing RAG Pipeline...")
+        logger.info(f"Initializing Universal RAG Pipeline with {provider.upper()}...")
         
-        # Initialize retriever
-        logger.info("Setting up retriever...")
-        self.retriever = BaselineRetriever()
+        # Initialize advanced retriever
+        logger.info("Setting up advanced retriever with reranking...")
+        self.retriever = AdvancedRetriever()
         
-        # Initialize OpenAI client
+        self.provider = provider.lower()
+        self.temperature = temperature
+        self.client = None
+        self.model_name = model
+        
+        # Initialize based on provider
+        if self.provider == "gemini":
+            self._init_gemini(api_key, model)
+        elif self.provider == "openai":
+            self._init_openai(api_key, model)
+        else:
+            raise ValueError(f"Unknown provider: {provider}. Use 'gemini' or 'openai'")
+        
+        logger.info("✅ Universal RAG Pipeline initialized!")
+    
+    def _init_gemini(self, api_key: Optional[str], model: Optional[str]):
+        """Initialize Gemini"""
+        if api_key is None:
+            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        
+        if api_key is None:
+            logger.warning("⚠️  No Google API key found!")
+            logger.warning("Get free key: https://aistudio.google.com/app/apikey")
+            logger.warning("Set: $env:GOOGLE_API_KEY='your-key'")
+            logger.warning("Pipeline will only retrieve, not generate")
+            return
+        
+        genai.configure(api_key=api_key)
+        self.model_name = model or "gemini-2.0-flash-exp"
+        self.client = genai.GenerativeModel(self.model_name)
+        logger.info(f"✅ Gemini initialized: {self.model_name} (FREE!)")
+    
+    def _init_openai(self, api_key: Optional[str], model: Optional[str]):
+        """Initialize OpenAI"""
         if api_key is None:
             api_key = os.getenv("OPENAI_API_KEY")
-            if api_key is None:
-                logger.warning("⚠️  No OpenAI API key found!")
-                logger.warning("Set OPENAI_API_KEY environment variable or pass api_key parameter")
-                logger.warning("Pipeline will only retrieve documents, not generate answers")
-                self.client = None
-            else:
-                self.client = OpenAI(api_key=api_key)
-                logger.info(f"✅ OpenAI client initialized with model: {model}")
-        else:
-            self.client = OpenAI(api_key=api_key)
-            logger.info(f"✅ OpenAI client initialized with model: {model}")
         
-        self.model = model
-        self.temperature = temperature
+        if api_key is None:
+            logger.warning("⚠️  No OpenAI API key found!")
+            logger.warning("Set: $env:OPENAI_API_KEY='your-key'")
+            logger.warning("Pipeline will only retrieve, not generate")
+            return
         
-        logger.info("✅ RAG Pipeline initialized successfully!")
+        self.client = OpenAI(api_key=api_key)
+        self.model_name = model or "gpt-3.5-turbo"
+        logger.info(f"✅ OpenAI initialized: {self.model_name}")
     
     def retrieve_context(self, query: str, k: int = 5) -> List[Dict]:
-        """
-        Retrieve relevant documents for a query
-        
-        Args:
-            query: User query
-            k: Number of documents to retrieve
-            
-        Returns:
-            List of retrieved documents
-        """
-        logger.info(f"Retrieving top-{k} documents for query...")
+        """Retrieve relevant documents with reranking"""
         return self.retriever.retrieve(query, k=k)
     
     def build_prompt(self, query: str, retrieved_docs: List[Dict]) -> str:
-        """
-        Build prompt with retrieved context
-        
-        Args:
-            query: User query
-            retrieved_docs: Retrieved documents
-            
-        Returns:
-            Formatted prompt string
-        """
-        # Build context from retrieved documents
+        """Build prompt with retrieved context"""
         context_parts = []
         for i, doc in enumerate(retrieved_docs, 1):
             title = doc['metadata'].get('title', 'Untitled')
             text = doc['document']
-            context_parts.append(f"[Source {i} - {title}]\n{text}")
+            context_parts.append(f"[Source {i}: {title}]\n{text}")
         
         context = "\n\n".join(context_parts)
         
-        # Build full prompt
-        prompt = f"""You are an intelligent onboarding assistant for GitLab. Answer the question based on the provided context from GitLab's handbook and meeting transcripts.
+        prompt = f"""You are an intelligent onboarding assistant for GitLab. Answer the question based ONLY on the provided context from GitLab's handbook and meeting transcripts.
 
-If the answer is not in the context, say "I don't have enough information to answer this question based on the available documents."
+If the answer is not in the context, say "I don't have enough information to answer this based on the available documents."
 
-Be concise, accurate, and cite which source(s) you're using.
+Be concise, accurate, and cite which source(s) you're using (e.g., "According to Source 1...").
 
 Context:
 {context}
@@ -108,83 +118,97 @@ Answer:"""
     
     def generate_answer(self, query: str, k: int = 5) -> Dict:
         """
-        Generate answer using RAG (Retrieval + Generation)
+        Generate answer using RAG
         
         Args:
             query: User query
             k: Number of documents to retrieve
             
         Returns:
-            Dictionary with answer, sources, and metadata
+            Response dictionary
         """
         logger.info("=" * 80)
         logger.info(f"Processing query: {query}")
         logger.info("=" * 80)
         
-        # Step 1: Retrieve relevant documents
+        # Retrieve documents
         retrieved_docs = self.retrieve_context(query, k=k)
-        logger.info(f"✅ Retrieved {len(retrieved_docs)} documents")
+        logger.info(f"✅ Retrieved {len(retrieved_docs)} documents with reranking")
         
-        # If no OpenAI client, return retrieval only
+        # If no client, return retrieval only
         if self.client is None:
-            logger.warning("⚠️  No OpenAI client - returning retrieval results only")
+            logger.warning("⚠️  No LLM client - returning retrieval only")
             return {
                 'query': query,
-                'answer': "[Generation not available - no OpenAI API key]",
+                'answer': "[Generation not available - no API key set]",
                 'sources': retrieved_docs,
                 'num_sources': len(retrieved_docs),
+                'provider': self.provider,
                 'model': None
             }
         
-        # Step 2: Build prompt with context
+        # Build prompt
         prompt = self.build_prompt(query, retrieved_docs)
         logger.info("✅ Built prompt with context")
         
-        # Step 3: Generate answer with LLM
-        logger.info(f"Generating answer using {self.model}...")
+        # Generate based on provider
+        logger.info(f"Generating answer using {self.provider.upper()}...")
+        
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful GitLab onboarding assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=self.temperature,
-                max_tokens=500
-            )
+            if self.provider == "gemini":
+                answer = self._generate_gemini(prompt)
+            else:  # openai
+                answer = self._generate_openai(prompt)
             
-            answer = response.choices[0].message.content
             logger.info("✅ Answer generated successfully")
             
         except Exception as e:
             logger.error(f"❌ Error generating answer: {e}")
-            answer = f"[Error generating answer: {str(e)}]"
+            answer = f"[Error: {str(e)}]"
         
-        # Step 4: Format response
+        # Format response
         result = {
             'query': query,
             'answer': answer,
             'sources': retrieved_docs,
             'num_sources': len(retrieved_docs),
-            'model': self.model
+            'provider': self.provider,
+            'model': self.model_name
         }
         
         return result
     
+    def _generate_gemini(self, prompt: str) -> str:
+        """Generate with Gemini"""
+        response = self.client.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=self.temperature,
+                max_output_tokens=500,
+            )
+        )
+        return response.text
+    
+    def _generate_openai(self, prompt: str) -> str:
+        """Generate with OpenAI"""
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "system", "content": "You are a helpful GitLab onboarding assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=self.temperature,
+            max_tokens=500
+        )
+        return response.choices[0].message.content
+    
     def print_response(self, result: Dict, show_full_sources: bool = False):
-        """
-        Pretty print RAG response
-        
-        Args:
-            result: Result dictionary from generate_answer
-            show_full_sources: Whether to show full source text
-        """
+        """Pretty print response"""
         print("\n" + "=" * 80)
-        print("💬 RAG RESPONSE")
+        print(f"💬 {result['provider'].upper()} RAG RESPONSE")
         print("=" * 80)
         
         print(f"\n❓ QUERY:\n{result['query']}")
-        
         print(f"\n💡 ANSWER:\n{result['answer']}")
         
         print(f"\n📚 SOURCES ({result['num_sources']}):")
@@ -193,52 +217,62 @@ Answer:"""
         for doc in result['sources']:
             print(f"\n🔹 Source {doc['rank']}")
             print(f"   Title: {doc['metadata'].get('title', 'N/A')}")
-            print(f"   Similarity: {doc['similarity']:.4f}")
+            print(f"   Rerank Score: {doc.get('rerank_score', 0):.4f}")
             
             if show_full_sources:
                 print(f"   Text: {doc['document']}")
             else:
-                preview = doc['document'][:150] + "..." if len(doc['document']) > 150 else doc['document']
+                preview = doc['document'][:200] + "..." if len(doc['document']) > 200 else doc['document']
                 print(f"   Preview: {preview}")
-        
-        print("\n" + "=" * 80)
+            
+            print("-" * 80)
 
 
-# Test the RAG pipeline
+# Test the pipeline
 if __name__ == "__main__":
     print("\n" + "=" * 80)
-    print("🧪 TESTING RAG PIPELINE")
+    print("🧪 TESTING UNIVERSAL RAG PIPELINE")
     print("=" * 80)
     
-    # Check for API key
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("\n⚠️  WARNING: No OPENAI_API_KEY found in environment variables")
-        print("The pipeline will work but won't generate answers (retrieval only)")
-        print("\nTo enable answer generation:")
-        print("1. Get an API key from https://platform.openai.com/api-keys")
-        print("2. Set it as an environment variable:")
-        print("   Windows: setx OPENAI_API_KEY \"your-key-here\"")
-        print("   Or pass it directly: RAGPipeline(api_key='your-key-here')")
-        print("\n" + "=" * 80)
-        input("\nPress Enter to continue with retrieval-only mode...")
+    # Check for API keys
+    gemini_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
     
-    # Initialize RAG pipeline
-    rag = RAGPipeline()
+    # Determine which provider to use
+    if gemini_key:
+        provider = "gemini"
+        print("\n✅ Using GEMINI (Free!)")
+    elif openai_key:
+        provider = "openai"
+        print("\n✅ Using OPENAI")
+    else:
+        provider = "gemini"
+        print("\n⚠️  No API keys found - retrieval-only mode")
+    
+    print("=" * 80)
+    
+    # Initialize
+    rag = UniversalRAGPipeline(provider=provider)
     
     # Test queries
     test_queries = [
         "What is GitLab's approach to sustainability?",
         "How does risk management work at GitLab?",
-        "Tell me about the CI/CD process"
+        "Tell me about legal compliance"
     ]
     
     for query in test_queries:
         result = rag.generate_answer(query, k=3)
-        rag.print_response(result, show_full_sources=False)
+        rag.print_response(result)
         
-        input("\n⏸️  Press Enter to continue to next query...")
+        if rag.client:
+            input("\n⏸️  Press Enter for next query...")
     
     print("\n" + "=" * 80)
-    print("✅ RAG PIPELINE TEST COMPLETE!")
+    print("✅ UNIVERSAL RAG TEST COMPLETE!")
+    print("=" * 80)
+    print(f"\n💰 Provider: {provider.upper()}")
+    print(f"🤖 Model: {rag.model_name}")
+    if provider == "gemini":
+        print("💸 Cost: $0.00 (FREE!)")
     print("=" * 80)

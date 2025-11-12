@@ -11,6 +11,11 @@ import logging
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from retrieval.advanced_retriever import AdvancedRetriever
 
@@ -68,7 +73,7 @@ class UniversalRAGPipeline:
             return
         
         genai.configure(api_key=api_key)
-        self.model_name = model or "gemini-2.0-flash-exp"
+        self.model_name = model or "gemini-2.0-flash"
         self.client = genai.GenerativeModel(self.model_name)
         logger.info(f"✅ Gemini initialized: {self.model_name} (FREE!)")
     

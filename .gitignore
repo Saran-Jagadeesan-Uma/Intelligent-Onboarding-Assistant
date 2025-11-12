@@ -2,4 +2,4 @@
 data/**
 !data/**/*.dvc
 !data/**/.gitignore
-!data/meeting_transcripts/
+!data/meeting_transcripts/logs/

@@ -1,6 +1,5 @@
 # Intelligent Onboarding Assistant - Model Pipeline
-FROM python:3.10-slim
-
+FROM python:3.13
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \

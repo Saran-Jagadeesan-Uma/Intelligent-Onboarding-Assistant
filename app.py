@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.generation.rag_pipeline import rag_pipeline as GeminiRAGPipeline
+from src.generation.rag_pipeline import UniversalRAGPipeline
 
 # Page configuration
 st.set_page_config(
@@ -100,13 +100,8 @@ if 'total_queries' not in st.session_state:
     st.session_state.total_queries = 0
 
 def initialize_pipeline():
-    """Initialize RAG pipeline"""
-    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
-    
-    if api_key:
-        return GeminiRAGPipeline(api_key=api_key)
-    else:
-        return GeminiRAGPipeline()
+    """Initialize RAG pipeline with Gemini"""
+    return UniversalRAGPipeline(provider="gemini")
 
 # Sidebar
 with st.sidebar:
@@ -128,11 +123,9 @@ with st.sidebar:
         with st.expander("🔑 How to enable full RAG"):
             st.markdown("""
             1. Get free key: [Google AI Studio](https://aistudio.google.com/app/apikey)
-            2. Set in PowerShell:
-```
-            $env:GOOGLE_API_KEY="your-key"
-```
-            3. Restart Streamlit
+            2. Create `.env` file in project root
+            3. Add: `GOOGLE_API_KEY=your-key-here`
+            4. Restart Streamlit
             """)
     
     st.markdown("---")
@@ -181,7 +174,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.caption("Built with ❤️ by Team 13")
-    st.caption("Powered by Gemini 2.0 Flash")
+    st.caption("Powered by Gemini 2.0")
 
 # Main content
 st.title("🚀 GitLab Onboarding Assistant")
@@ -249,7 +242,7 @@ if search_button and query_input:
                 st.markdown(f"**Rank Before Rerank:** {doc['rank_before_rerank']}")
             
             st.markdown("**Content:**")
-            st.text_area("", text, height=200, key=f"source_{i}_{query_input[:20]}", disabled=True)
+            st.text_area("", text, height=200, key=f"source_{i}_{st.session_state.total_queries}", disabled=True)
 
 elif search_button:
     st.warning("⚠️ Please enter a question!")
@@ -262,7 +255,7 @@ if st.session_state.chat_history:
     for i, item in enumerate(st.session_state.chat_history[:5], 1):
         with st.expander(f"{i}. {item['query']}", expanded=(i == 1)):
             st.markdown(f"**Answer:** {item['answer']}")
-            st.caption(f"Sources: {item['num_sources']} | Model: {item.get('model', 'N/A')}")
+            st.caption(f"Sources: {item['num_sources']} | Provider: {item.get('provider', 'N/A')} | Model: {item.get('model', 'N/A')}")
 
 # Footer
 st.markdown("---")

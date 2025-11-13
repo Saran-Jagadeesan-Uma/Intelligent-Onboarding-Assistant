@@ -242,7 +242,7 @@ if search_button and query_input:
                 st.markdown(f"**Rank Before Rerank:** {doc['rank_before_rerank']}")
             
             st.markdown("**Content:**")
-            st.text_area("", text, height=200, key=f"source_{i}_{st.session_state.total_queries}", disabled=True)
+            st.text_area("Source Content", text, height=200, key=f"source_{i}_{st.session_state.total_queries}", disabled=True, label_visibility="collapsed")
 
 elif search_button:
     st.warning("⚠️ Please enter a question!")

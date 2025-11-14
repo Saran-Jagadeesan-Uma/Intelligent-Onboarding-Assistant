@@ -1,8 +1,3 @@
-"""
-RAGAS Evaluation Framework
-Evaluates RAG systems for faithfulness, answer relevancy, and context precision
-"""
-
 from ragas import evaluate
 from ragas.metrics import (
     faithfulness,
@@ -23,7 +18,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class RAGASEvaluator:
-    """Evaluate RAG pipeline using RAGAS framework"""
     
     def __init__(self):
         """Initialize RAGAS evaluator"""
@@ -33,25 +27,15 @@ class RAGASEvaluator:
             context_precision,
             context_recall
         ]
-        logger.info("✅ RAGAS Evaluator initialized")
+        logger.info(" RAGAS Evaluator initialized")
         logger.info(f"   Metrics: {[m.name for m in self.metrics]}")
     
     def evaluate_retrieval_only(self, 
                                 retriever,
                                 test_data: List[Dict]) -> Dict:
-        """
-        Evaluate retrieval-only system (without LLM generation)
-        Uses context-based metrics only
         
-        Args:
-            retriever: Retriever instance
-            test_data: List of dicts with 'question' and 'ground_truth_context'
-            
-        Returns:
-            Evaluation results
-        """
         logger.info("\n" + "="*80)
-        logger.info("📊 RAGAS EVALUATION (RETRIEVAL-ONLY MODE)")
+        logger.info(" RAGAS EVALUATION (RETRIEVAL-ONLY MODE)")
         logger.info("="*80)
         
         results_data = []
@@ -62,12 +46,9 @@ class RAGASEvaluator:
             
             logger.info(f"\nEvaluating: {question[:60]}...")
             
-            # Retrieve contexts
             retrieved_docs = retriever.retrieve(question, k=5)
             contexts = [doc['document'] for doc in retrieved_docs]
             
-            # For retrieval-only, we'll create a synthetic answer from contexts
-            # This allows us to use RAGAS context metrics
             synthetic_answer = f"Based on the retrieved documents: {contexts[0][:200]}..."
             
             results_data.append({
@@ -77,13 +58,10 @@ class RAGASEvaluator:
                 'ground_truth': ground_truth
             })
         
-        # Create dataset
         dataset = Dataset.from_pandas(pd.DataFrame(results_data))
         
-        # Evaluate with context-focused metrics
-        logger.info("\n🔬 Running RAGAS evaluation...")
+        logger.info("\n Running RAGAS evaluation...")
         
-        # Use only context metrics for retrieval-only mode
         context_metrics = [context_precision, context_recall]
         
         try:
@@ -92,9 +70,8 @@ class RAGASEvaluator:
                 metrics=context_metrics
             )
             
-            logger.info("✅ RAGAS evaluation complete!")
+            logger.info(" RAGAS evaluation complete!")
             
-            # Convert to dict
             results_dict = {
                 'num_queries': len(test_data),
                 'metrics': {}
@@ -107,23 +84,14 @@ class RAGASEvaluator:
             return results_dict
             
         except Exception as e:
-            logger.error(f"❌ RAGAS evaluation failed: {e}")
-            logger.warning("⚠️  RAGAS requires LLM for full evaluation")
+            logger.error(f" RAGAS evaluation failed: {e}")
+            logger.warning("  RAGAS requires LLM for full evaluation")
             logger.warning("   Falling back to custom metrics...")
             
-            # Fallback to custom context-based metrics
             return self._custom_context_metrics(results_data)
     
     def _custom_context_metrics(self, results_data: List[Dict]) -> Dict:
-        """
-        Custom context-based metrics when RAGAS fails
-        
-        Args:
-            results_data: Evaluation data
-            
-        Returns:
-            Custom metrics
-        """
+
         logger.info("📊 Computing custom context metrics...")
         
         metrics = {
@@ -133,7 +101,7 @@ class RAGASEvaluator:
             'context_diversity': self._calculate_context_diversity(results_data)
         }
         
-        logger.info(f"\n📈 Custom Metrics:")
+        logger.info(f"\n Custom Metrics:")
         logger.info(f"  Avg contexts retrieved: {metrics['avg_contexts_retrieved']:.2f}")
         logger.info(f"  Context coverage: {metrics['context_coverage']:.4f}")
         logger.info(f"  Context diversity: {metrics['context_diversity']:.4f}")
@@ -141,8 +109,6 @@ class RAGASEvaluator:
         return {'metrics': metrics}
     
     def _calculate_context_coverage(self, results_data: List[Dict]) -> float:
-        """Calculate how well contexts cover the query"""
-        # Simple metric: average number of unique tokens in contexts
         import numpy as np
         
         coverages = []
@@ -159,7 +125,6 @@ class RAGASEvaluator:
         return np.mean(coverages) if coverages else 0.0
     
     def _calculate_context_diversity(self, results_data: List[Dict]) -> float:
-        """Calculate diversity of retrieved contexts"""
         import numpy as np
         
         diversities = []
@@ -169,7 +134,6 @@ class RAGASEvaluator:
                 diversities.append(1.0)
                 continue
             
-            # Simple diversity: unique word ratio
             all_words = []
             for context in contexts:
                 all_words.extend(context.lower().split())
@@ -187,10 +151,9 @@ class RAGASEvaluator:
         with open(output_file, 'w') as f:
             json.dump(results, f, indent=2)
         
-        logger.info(f"\n💾 RAGAS results saved: {output_path}")
+        logger.info(f"\n RAGAS results saved: {output_path}")
 
 
-# Test RAGAS evaluator
 if __name__ == "__main__":
     import sys
     from pathlib import Path
@@ -200,14 +163,12 @@ if __name__ == "__main__":
     from retrieval.advanced_retriever import AdvancedRetriever
     
     print("\n" + "="*80)
-    print("🧪 TESTING RAGAS EVALUATION FRAMEWORK")
+    print(" TESTING RAGAS EVALUATION FRAMEWORK")
     print("="*80)
     
-    # Initialize
     retriever = AdvancedRetriever()
     evaluator = RAGASEvaluator()
     
-    # Create test data
     test_data = [
         {
             'question': 'What is GitLab\'s approach to sustainability?',
@@ -223,27 +184,24 @@ if __name__ == "__main__":
         }
     ]
     
-    print("\n⚠️  NOTE: RAGAS requires OpenAI API for full evaluation")
+    print("\n  NOTE: RAGAS requires OpenAI API for full evaluation")
     print("Without API key, we'll use custom context-based metrics instead.\n")
     
-    # Evaluate
     results = evaluator.evaluate_retrieval_only(retriever, test_data)
     
-    # Print results
     print("\n" + "="*80)
-    print("📊 RAGAS EVALUATION RESULTS")
+    print(" RAGAS EVALUATION RESULTS")
     print("="*80)
     
     if 'metrics' in results:
         for metric_name, value in results['metrics'].items():
             print(f"  • {metric_name}: {value:.4f}")
     
-    # Save results
     evaluator.save_results(results)
     
     print("\n" + "="*80)
-    print("✅ RAGAS EVALUATION COMPLETE!")
+    print(" RAGAS EVALUATION COMPLETE!")
     print("="*80)
-    print("\nℹ️  For full RAGAS metrics (faithfulness, answer_relevancy),")
+    print("\n  For full RAGAS metrics (faithfulness, answer_relevancy),")
     print("   set OPENAI_API_KEY environment variable.")
     print("="*80)

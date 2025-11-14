@@ -1,8 +1,3 @@
-"""
-COMPREHENSIVE End-to-End Test Script
-Tests ALL components including advanced features with Gemini
-"""
-
 import sys
 from pathlib import Path
 import logging
@@ -11,17 +6,15 @@ import os
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-logging.basicConfig(level=logging.WARNING)  # Reduce noise
+logging.basicConfig(level=logging.WARNING)  
 logger = logging.getLogger(__name__)
 
 def print_header(title):
-    """Print formatted header"""
     print("\n" + "=" * 80)
     print(f"  {title}")
     print("=" * 80 + "\n")
 
 def test_data_loading():
-    """Test 1: Data Loading"""
     print_header("TEST 1: DATA LOADING")
     
     try:
@@ -32,15 +25,14 @@ def test_data_loading():
         
         assert len(chunks) > 0, "No data loaded!"
         
-        print(f"✅ PASSED: Loaded {len(chunks)} chunks")
+        print(f" PASSED: Loaded {len(chunks)} chunks")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_embeddings():
-    """Test 2: Embeddings"""
     print_header("TEST 2: EMBEDDINGS")
     
     try:
@@ -51,15 +43,14 @@ def test_embeddings():
         
         embeddings = np.load(embeddings_path)
         
-        print(f"✅ PASSED: Embeddings shape {embeddings.shape}")
+        print(f" PASSED: Embeddings shape {embeddings.shape}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_vector_store():
-    """Test 3: Vector Store"""
     print_header("TEST 3: VECTOR STORE")
     
     try:
@@ -73,15 +64,14 @@ def test_vector_store():
         count = vector_store.collection.count()
         assert count > 0, "Vector store is empty!"
         
-        print(f"✅ PASSED: {count} documents indexed")
+        print(f" PASSED: {count} documents indexed")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_baseline_retrieval():
-    """Test 4: Baseline Retrieval"""
     print_header("TEST 4: BASELINE RETRIEVAL")
     
     try:
@@ -92,16 +82,15 @@ def test_baseline_retrieval():
         
         assert len(results) == 3, "Should retrieve 3 documents"
         
-        print(f"✅ PASSED: Baseline retrieval working")
+        print(f" PASSED: Baseline retrieval working")
         print(f"   Top similarity: {results[0]['similarity']:.4f}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_advanced_retrieval():
-    """Test 5: Advanced Retrieval with Reranking"""
     print_header("TEST 5: ADVANCED RETRIEVAL (RERANKING)")
     
     try:
@@ -113,22 +102,20 @@ def test_advanced_retrieval():
         assert len(results) == 3, "Should retrieve 3 documents"
         assert 'rerank_score' in results[0], "Missing rerank score"
         
-        print(f"✅ PASSED: Advanced retrieval with reranking")
+        print(f" PASSED: Advanced retrieval with reranking")
         print(f"   Top rerank score: {results[0]['rerank_score']:.4f}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_rag_generation():
-    """Test 6: RAG with Gemini Generation"""
     print_header("TEST 6: RAG GENERATION (GEMINI)")
     
     try:
         from src.generation.rag_pipeline import UniversalRAGPipeline
         
-        # Check for API key
         api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         
         rag = UniversalRAGPipeline(provider="gemini")
@@ -138,22 +125,20 @@ def test_rag_generation():
         assert 'sources' in result, "Missing sources"
         
         if api_key and rag.client:
-            # Check if answer was actually generated
             assert result['answer'] != "[Generation not available - no API key set]"
-            print(f"✅ PASSED: Full RAG with Gemini generation")
+            print(f" PASSED: Full RAG with Gemini generation")
             print(f"   Answer length: {len(result['answer'])} chars")
             print(f"   Sources used: {result['num_sources']}")
         else:
-            print(f"⚠️  PARTIAL: RAG framework working (retrieval-only, no API key)")
+            print(f"  PARTIAL: RAG framework working (retrieval-only, no API key)")
         
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_evaluation_metrics():
-    """Test 7: Evaluation Metrics"""
     print_header("TEST 7: EVALUATION METRICS")
     
     try:
@@ -168,17 +153,16 @@ def test_evaluation_metrics():
         
         assert 'mrr' in results, "Missing MRR"
         
-        print(f"✅ PASSED: Evaluation metrics")
+        print(f" PASSED: Evaluation metrics")
         print(f"   MRR: {results['mrr']:.4f}")
         print(f"   Precision@5: {results['metrics_by_k']['k=5']['precision']:.4f}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_bias_detection():
-    """Test 8: Bias Detection"""
     print_header("TEST 8: BIAS DETECTION")
     
     try:
@@ -196,16 +180,15 @@ def test_bias_detection():
         
         assert 'has_significant_bias' in report, "Missing bias flag"
         
-        print(f"✅ PASSED: Bias detection")
+        print(f" PASSED: Bias detection")
         print(f"   Significant bias: {report['has_significant_bias']}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_sensitivity_analysis():
-    """Test 9: Sensitivity Analysis"""
     print_header("TEST 9: SENSITIVITY ANALYSIS")
     
     try:
@@ -221,20 +204,18 @@ def test_sensitivity_analysis():
             {'query': 'sustainability', 'relevant_ids': ['doc_8']},
         ]
         
-        # Just test that it runs
         report = analyzer.analyze_embedding_dimension_impact()
         
         assert 'embedding_dimension' in report or len(report) == 0
         
-        print(f"✅ PASSED: Sensitivity analysis")
+        print(f" PASSED: Sensitivity analysis")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_ragas():
-    """Test 10: RAGAS Evaluation"""
     print_header("TEST 10: RAGAS EVALUATION")
     
     try:
@@ -252,15 +233,14 @@ def test_ragas():
         
         assert 'metrics' in results or 'num_queries' in results
         
-        print(f"✅ PASSED: RAGAS evaluation")
+        print(f" PASSED: RAGAS evaluation")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_model_registry():
-    """Test 11: Model Registry"""
     print_header("TEST 11: MODEL REGISTRY")
     
     try:
@@ -273,19 +253,18 @@ def test_model_registry():
             
             assert 'models' in manifest, "Invalid manifest"
             
-            print(f"✅ PASSED: Model registry")
+            print(f" PASSED: Model registry")
             print(f"   Models registered: {len(manifest['models'])}")
         else:
-            print(f"⚠️  SKIPPED: Model registry not found (run model_registry.py)")
+            print(f"  SKIPPED: Model registry not found (run model_registry.py)")
         
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def test_mlflow_tracking():
-    """Test 12: MLflow Experiment Tracking"""
     print_header("TEST 12: MLFLOW EXPERIMENT TRACKING")
     
     try:
@@ -296,26 +275,24 @@ def test_mlflow_tracking():
         
         assert len(experiments) > 0, "No experiments found"
         
-        print(f"✅ PASSED: MLflow tracking")
+        print(f" PASSED: MLflow tracking")
         print(f"   Experiments: {len(experiments)}")
         return True
         
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f" FAILED: {e}")
         return False
 
 def run_all_tests():
-    """Run all comprehensive tests"""
     print("\n" + "=" * 80)
-    print("  🚀 COMPREHENSIVE PIPELINE TEST - ALL FEATURES")
+    print("  COMPREHENSIVE PIPELINE TEST - ALL FEATURES")
     print("=" * 80)
     
-    # Check for API key
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if api_key:
-        print("\n  ✅ Gemini API key found - testing full RAG generation!")
+        print("\n  Gemini API key found - testing full RAG generation!")
     else:
-        print("\n  ⚠️  No API key - testing retrieval components only")
+        print("\n  No API key - testing retrieval components only")
     
     print("=" * 80)
     
@@ -343,21 +320,20 @@ def run_all_tests():
             passed = test_func()
             results.append((test_name, passed))
         except Exception as e:
-            print(f"\n❌ UNEXPECTED ERROR in {test_name}: {e}")
+            print(f"\n UNEXPECTED ERROR in {test_name}: {e}")
             results.append((test_name, False))
     
-    # Summary
     elapsed_time = time.time() - start_time
     
     print("\n" + "=" * 80)
-    print("  📊 COMPREHENSIVE TEST SUMMARY")
+    print("  COMPREHENSIVE TEST SUMMARY")
     print("=" * 80 + "\n")
     
     passed_count = sum(1 for _, passed in results if passed)
     total_count = len(results)
     
     for test_name, passed in results:
-        status = "✅ PASSED" if passed else "❌ FAILED"
+        status = " PASSED" if passed else " FAILED"
         print(f"  {status}: {test_name}")
     
     print("\n" + "-" * 80)
@@ -366,33 +342,32 @@ def run_all_tests():
     print(f"  Time: {elapsed_time:.2f} seconds")
     print("=" * 80)
     
-    # Feature summary
     print("\n" + "=" * 80)
-    print("  🎯 FEATURE COVERAGE")
+    print("  FEATURE COVERAGE")
     print("=" * 80)
-    print("  ✅ Data Pipeline Integration")
-    print("  ✅ Embedding Generation (384-dim vectors)")
-    print("  ✅ Vector Store (ChromaDB)")
-    print("  ✅ Baseline Retrieval (Top-K)")
-    print("  ✅ Advanced Retrieval (Cross-encoder reranking)")
-    print("  ✅ RAG Framework (Gemini LLM)")
-    print("  ✅ Evaluation Metrics (Precision, Recall, MRR, NDCG)")
-    print("  ✅ Bias Detection (Slice-based fairness)")
-    print("  ✅ Sensitivity Analysis (Query length, K-value)")
-    print("  ✅ RAGAS Evaluation (Context metrics)")
-    print("  ✅ Model Registry (Versioning)")
-    print("  ✅ MLflow Tracking (Experiment management)")
+    print("   Data Pipeline Integration")
+    print("   Embedding Generation (384-dim vectors)")
+    print("   Vector Store (ChromaDB)")
+    print("   Baseline Retrieval (Top-K)")
+    print("   Advanced Retrieval (Cross-encoder reranking)")
+    print("   RAG Framework (Gemini LLM)")
+    print("   Evaluation Metrics (Precision, Recall, MRR, NDCG)")
+    print("   Bias Detection (Slice-based fairness)")
+    print("   Sensitivity Analysis (Query length, K-value)")
+    print("   RAGAS Evaluation (Context metrics)")
+    print("   Model Registry (Versioning)")
+    print("   MLflow Tracking (Experiment management)")
     print("=" * 80)
     
     if passed_count == total_count:
-        print("\n🎉 ALL TESTS PASSED! PIPELINE 100% COMPLETE! 🎉")
-        print("\n💡 Next steps:")
+        print("\n ALL TESTS PASSED! PIPELINE 100% COMPLETE! 🎉")
+        print("\n Next steps:")
         print("   - Run: python -m streamlit run app.py (web UI)")
         print("   - Run: python -m mlflow ui (view experiments)")
         print("\n" + "=" * 80 + "\n")
         return True
     else:
-        print(f"\n⚠️  {total_count - passed_count} test(s) failed.\n")
+        print(f"\n {total_count - passed_count} test(s) failed.\n")
         return False
 
 if __name__ == "__main__":

@@ -1,8 +1,3 @@
-"""
-Sensitivity Analysis for Retrieval System
-Analyzes how different features impact retrieval performance
-"""
-
 import numpy as np
 import json
 from pathlib import Path
@@ -14,35 +9,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class RetrievalSensitivityAnalyzer:
-    """Analyze sensitivity of retrieval system to different factors"""
     
     def __init__(self, retriever, evaluator):
-        """
-        Initialize analyzer
-        
-        Args:
-            retriever: Retriever instance
-            evaluator: RetrievalEvaluator instance
-        """
+
         self.retriever = retriever
         self.evaluator = evaluator
-        logger.info("✅ Sensitivity analyzer initialized")
+        logger.info(" Sensitivity analyzer initialized")
     
     def analyze_query_length_sensitivity(self, test_queries: List[Dict]) -> Dict:
-        """
-        Analyze how query length affects retrieval performance
-        
-        Args:
-            test_queries: List of test queries with relevant_ids
-            
-        Returns:
-            Analysis results
-        """
+
         logger.info("\n" + "="*80)
-        logger.info("🔍 ANALYZING QUERY LENGTH SENSITIVITY")
+        logger.info(" ANALYZING QUERY LENGTH SENSITIVITY")
         logger.info("="*80)
         
-        # Group queries by length
         length_groups = defaultdict(list)
         
         for query_data in test_queries:
@@ -58,7 +37,6 @@ class RetrievalSensitivityAnalyzer:
             
             length_groups[group].append(query_data)
         
-        # Evaluate each group
         results = {}
         
         for group_name, queries in length_groups.items():
@@ -82,20 +60,11 @@ class RetrievalSensitivityAnalyzer:
         return results
     
     def analyze_source_type_sensitivity(self, test_queries: List[Dict]) -> Dict:
-        """
-        Analyze how source type affects retrieval
-        
-        Args:
-            test_queries: List of test queries
-            
-        Returns:
-            Source type analysis
-        """
+
         logger.info("\n" + "="*80)
-        logger.info("🔍 ANALYZING SOURCE TYPE SENSITIVITY")
+        logger.info(" ANALYZING SOURCE TYPE SENSITIVITY")
         logger.info("="*80)
         
-        # Retrieve for all queries and track source types
         source_performance = defaultdict(lambda: {
             'retrieved_count': 0,
             'relevant_count': 0,
@@ -118,7 +87,6 @@ class RetrievalSensitivityAnalyzer:
                     source_performance[source_type]['relevant_count'] += 1
                     source_performance[source_type]['ranks'].append(rank)
         
-        # Calculate metrics per source
         results = {}
         
         for source_type, stats in source_performance.items():
@@ -140,15 +108,11 @@ class RetrievalSensitivityAnalyzer:
         return results
     
     def analyze_embedding_dimension_impact(self) -> Dict:
-        """
-        Analyze the impact of embedding dimensions
-        NOTE: This is theoretical for pre-trained models
-        """
+
         logger.info("\n" + "="*80)
-        logger.info("🔍 ANALYZING EMBEDDING DIMENSION IMPACT")
+        logger.info(" ANALYZING EMBEDDING DIMENSION IMPACT")
         logger.info("="*80)
         
-        # Load model info
         model_info_path = Path("models/embeddings/model_info.json")
         
         if model_info_path.exists():
@@ -158,9 +122,8 @@ class RetrievalSensitivityAnalyzer:
             embedding_dim = model_info['embedding_dim']
             num_embeddings = model_info['num_embeddings']
             
-            # Calculate theoretical metrics
             total_params = embedding_dim * num_embeddings
-            memory_mb = (total_params * 4) / (1024 * 1024)  # float32
+            memory_mb = (total_params * 4) / (1024 * 1024) 
             
             results = {
                 'embedding_dimension': embedding_dim,
@@ -175,7 +138,7 @@ class RetrievalSensitivityAnalyzer:
                 }
             }
             
-            logger.info(f"\n📐 Embedding Analysis:")
+            logger.info(f"\n Embedding Analysis:")
             logger.info(f"  Dimensions: {embedding_dim}")
             logger.info(f"  Documents: {num_embeddings}")
             logger.info(f"  Memory: {memory_mb:.2f} MB")
@@ -187,24 +150,16 @@ class RetrievalSensitivityAnalyzer:
             return {}
     
     def analyze_retrieval_k_sensitivity(self, test_queries: List[Dict]) -> Dict:
-        """
-        Analyze how different K values affect performance
-        
-        Args:
-            test_queries: Test queries
-            
-        Returns:
-            K-value sensitivity analysis
-        """
+
         logger.info("\n" + "="*80)
-        logger.info("🔍 ANALYZING K-VALUE SENSITIVITY")
+        logger.info(" ANALYZING K-VALUE SENSITIVITY")
         logger.info("="*80)
         
         k_values = [1, 3, 5, 10, 20]
         results = {}
         
         for k in k_values:
-            logger.info(f"\n📊 Evaluating K={k}...")
+            logger.info(f"\n Evaluating K={k}...")
             
             eval_results = self.evaluator.evaluate(test_queries, k_values=[k])
             
@@ -220,17 +175,9 @@ class RetrievalSensitivityAnalyzer:
         return results
     
     def generate_sensitivity_report(self, test_queries: List[Dict]) -> Dict:
-        """
-        Generate comprehensive sensitivity analysis report
-        
-        Args:
-            test_queries: Test queries
-            
-        Returns:
-            Complete sensitivity report
-        """
+
         logger.info("\n" + "="*80)
-        logger.info("📋 GENERATING COMPREHENSIVE SENSITIVITY REPORT")
+        logger.info(" GENERATING COMPREHENSIVE SENSITIVITY REPORT")
         logger.info("="*80)
         
         report = {
@@ -240,16 +187,13 @@ class RetrievalSensitivityAnalyzer:
             'k_value_sensitivity': self.analyze_retrieval_k_sensitivity(test_queries)
         }
         
-        # Add summary insights
         report['insights'] = self._generate_insights(report)
         
         return report
     
     def _generate_insights(self, report: Dict) -> List[str]:
-        """Generate actionable insights from analysis"""
         insights = []
         
-        # Query length insights
         if 'query_length_sensitivity' in report:
             lengths = report['query_length_sensitivity']
             if lengths:
@@ -260,7 +204,6 @@ class RetrievalSensitivityAnalyzer:
                     f"(Precision@5: {best_length[1]['precision_at_5']:.2%})"
                 )
         
-        # K-value insights
         if 'k_value_sensitivity' in report:
             k_results = report['k_value_sensitivity']
             if k_results:
@@ -270,7 +213,6 @@ class RetrievalSensitivityAnalyzer:
                     f"Optimal K value: {best_k[0]} (F1: {best_k[1]['f1']:.2%})"
                 )
         
-        # Embedding insights
         if 'embedding_analysis' in report:
             emb = report['embedding_analysis']
             if emb:
@@ -282,17 +224,15 @@ class RetrievalSensitivityAnalyzer:
         return insights
     
     def save_report(self, report: Dict, output_path: str = "experiments/sensitivity_analysis.json"):
-        """Save sensitivity report"""
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         with open(output_file, 'w') as f:
             json.dump(report, f, indent=2)
         
-        logger.info(f"\n💾 Sensitivity report saved: {output_path}")
+        logger.info(f"\n Sensitivity report saved: {output_path}")
 
 
-# Run sensitivity analysis
 if __name__ == "__main__":
     import sys
     from pathlib import Path
@@ -302,15 +242,13 @@ if __name__ == "__main__":
     from evaluation.metrics import RetrievalEvaluator
     
     print("\n" + "="*80)
-    print("🧪 SENSITIVITY ANALYSIS")
+    print(" SENSITIVITY ANALYSIS")
     print("="*80)
     
-    # Initialize components
     retriever = BaselineRetriever()
     evaluator = RetrievalEvaluator(retriever)
     analyzer = RetrievalSensitivityAnalyzer(retriever, evaluator)
     
-    # Test queries
     test_queries = [
         {'query': 'sustainability', 'relevant_ids': ['doc_8']},
         {'query': 'What is GitLab approach to sustainability?', 'relevant_ids': ['doc_8']},
@@ -320,20 +258,17 @@ if __name__ == "__main__":
         {'query': 'Tell me about the CI/CD UX meeting discussions', 'relevant_ids': ['doc_3']},
     ]
     
-    # Generate report
     report = analyzer.generate_sensitivity_report(test_queries)
     
-    # Print insights
     print("\n" + "="*80)
-    print("💡 KEY INSIGHTS")
+    print(" KEY INSIGHTS")
     print("="*80)
     
     for i, insight in enumerate(report['insights'], 1):
         print(f"{i}. {insight}")
     
-    # Save report
     analyzer.save_report(report)
     
     print("\n" + "="*80)
-    print("✅ SENSITIVITY ANALYSIS COMPLETE!")
+    print(" SENSITIVITY ANALYSIS COMPLETE!")
     print("="*80)

@@ -12,54 +12,33 @@ class BaselineRetriever:
                  embedding_model: str = "all-MiniLM-L6-v2",
                  vector_store_dir: str = "models/vector_store",
                  collection_name: str = "gitlab_onboarding"):
-        """
-        Initialize retriever with embedding model and vector store
-        
-        Args:
-            embedding_model: Name of sentence-transformer model
-            vector_store_dir: Directory containing vector store
-            collection_name: Name of the ChromaDB collection
-        """
+
         logger.info("Initializing BaselineRetriever...")
         
-        # Load embedding model
         logger.info(f"Loading embedding model: {embedding_model}")
         self.encoder = SentenceTransformer(embedding_model)
         self.model_name = embedding_model
         
-        # Connect to vector store
         logger.info(f"Connecting to vector store: {vector_store_dir}")
         self.vector_store = VectorStore(
             collection_name=collection_name,
             persist_directory=vector_store_dir
         )
         
-        logger.info("✅ BaselineRetriever initialized successfully!")
+        logger.info(" BaselineRetriever initialized successfully!")
     
     def retrieve(self, query: str, k: int = 5) -> List[Dict]:
-        """
-        Retrieve top-k most relevant documents for a query
-        
-        Args:
-            query: User query string
-            k: Number of documents to retrieve
-            
-        Returns:
-            List of retrieved documents with metadata and scores
-        """
+
         logger.info(f"Query: {query}")
         logger.info(f"Retrieving top-{k} documents...")
         
-        # Generate query embedding
         query_embedding = self.encoder.encode(query, normalize_embeddings=True)
         
-        # Query vector store
         results = self.vector_store.query(
             query_embedding=query_embedding,
             n_results=k
         )
         
-        # Format results
         retrieved_docs = []
         for i in range(len(results['ids'][0])):
             doc = {
@@ -67,12 +46,12 @@ class BaselineRetriever:
                 'id': results['ids'][0][i],
                 'document': results['documents'][0][i],
                 'distance': results['distances'][0][i],
-                'similarity': 1 - results['distances'][0][i],  # Convert distance to similarity
+                'similarity': 1 - results['distances'][0][i],  
                 'metadata': results['metadatas'][0][i] if results['metadatas'][0] else {}
             }
             retrieved_docs.append(doc)
         
-        logger.info(f"✅ Retrieved {len(retrieved_docs)} documents")
+        logger.info(f" Retrieved {len(retrieved_docs)} documents")
         return retrieved_docs
     
     def print_results(self, results: List[Dict], show_full_text: bool = False):
@@ -84,7 +63,7 @@ class BaselineRetriever:
             show_full_text: Whether to show full document text
         """
         print("\n" + "=" * 80)
-        print(f"📊 RETRIEVAL RESULTS ({len(results)} documents)")
+        print(f" RETRIEVAL RESULTS ({len(results)} documents)")
         print("=" * 80)
         
         for doc in results:
@@ -109,13 +88,11 @@ class BaselineRetriever:
 # Test the retriever
 if __name__ == "__main__":
     print("\n" + "=" * 80)
-    print("🧪 TESTING BASELINE RETRIEVER")
+    print(" TESTING BASELINE RETRIEVER")
     print("=" * 80)
     
-    # Initialize retriever
     retriever = BaselineRetriever()
     
-    # Test queries
     test_queries = [
         "What is GitLab's remote work policy?",
         "How do I submit a pull request?",
@@ -125,17 +102,15 @@ if __name__ == "__main__":
     
     for query in test_queries:
         print(f"\n\n{'='*80}")
-        print(f"🔍 QUERY: {query}")
+        print(f" QUERY: {query}")
         print('='*80)
         
-        # Retrieve documents
         results = retriever.retrieve(query, k=3)
         
-        # Print results
         retriever.print_results(results, show_full_text=False)
         
-        input("\n⏸️  Press Enter to continue to next query...")
+        input("\n Press Enter to continue to next query...")
     
     print("\n" + "=" * 80)
-    print("✅ RETRIEVER TEST COMPLETE!")
+    print(" RETRIEVER TEST COMPLETE!")
     print("=" * 80)

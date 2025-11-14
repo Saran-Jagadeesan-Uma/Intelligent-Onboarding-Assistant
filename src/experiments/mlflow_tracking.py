@@ -10,28 +10,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ExperimentTracker:
-    """Track ML experiments using MLflow"""
     
     def __init__(self, 
                  experiment_name: str = "onboarding-assistant-retrieval",
                  tracking_uri: str = "file:./experiments/mlruns"):
-        """
-        Initialize MLflow experiment tracker
-        
-        Args:
-            experiment_name: Name of the experiment
-            tracking_uri: URI for MLflow tracking (local file storage)
-        """
-        # Set tracking URI
+
         mlflow.set_tracking_uri(tracking_uri)
         
-        # Set or create experiment
         mlflow.set_experiment(experiment_name)
         
         self.experiment_name = experiment_name
         self.tracking_uri = tracking_uri
         
-        logger.info(f"✅ MLflow initialized")
+        logger.info(f" MLflow initialized")
         logger.info(f"   Experiment: {experiment_name}")
         logger.info(f"   Tracking URI: {tracking_uri}")
     
@@ -42,25 +33,14 @@ class ExperimentTracker:
                                  eval_results: Dict,
                                  params: Optional[Dict] = None,
                                  tags: Optional[Dict] = None):
-        """
-        Log a retrieval experiment
-        
-        Args:
-            model_name: Name/version of the model
-            embedding_model: Embedding model used
-            vector_store: Vector store used
-            eval_results: Evaluation results dictionary
-            params: Additional parameters
-            tags: Tags for the run
-        """
+
         run_name = f"{model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
         with mlflow.start_run(run_name=run_name) as run:
             logger.info(f"\n{'='*80}")
-            logger.info(f"📊 LOGGING EXPERIMENT: {run_name}")
+            logger.info(f" LOGGING EXPERIMENT: {run_name}")
             logger.info(f"{'='*80}")
             
-            # Log parameters
             mlflow.log_param("model_name", model_name)
             mlflow.log_param("embedding_model", embedding_model)
             mlflow.log_param("vector_store", vector_store)
@@ -70,10 +50,8 @@ class ExperimentTracker:
                 for key, value in params.items():
                     mlflow.log_param(key, value)
             
-            # Log overall metrics
             mlflow.log_metric("mrr", eval_results['mrr'])
             
-            # Log metrics by K
             for k_label, metrics in eval_results['metrics_by_k'].items():
                 k_value = k_label.split('=')[1]
                 mlflow.log_metric(f"precision_at_{k_value}", metrics['precision'])
@@ -81,14 +59,11 @@ class ExperimentTracker:
                 mlflow.log_metric(f"f1_at_{k_value}", metrics['f1'])
                 mlflow.log_metric(f"ndcg_at_{k_value}", metrics['ndcg'])
             
-            # Log tags
             if tags:
                 mlflow.set_tags(tags)
             
-            # Log timestamp
             mlflow.set_tag("timestamp", datetime.now().isoformat())
             
-            # Save evaluation results as artifact
             results_file = Path("experiments/temp_results.json")
             results_file.parent.mkdir(parents=True, exist_ok=True)
             
@@ -96,9 +71,9 @@ class ExperimentTracker:
                 json.dump(eval_results, f, indent=2)
             
             mlflow.log_artifact(str(results_file), artifact_path="evaluation")
-            results_file.unlink()  # Clean up temp file
+            results_file.unlink()  
             
-            logger.info(f"\n✅ Experiment logged successfully!")
+            logger.info(f"\n Experiment logged successfully!")
             logger.info(f"   Run ID: {run.info.run_id}")
             logger.info(f"   Run Name: {run_name}")
             logger.info(f"\n{'='*80}\n")
@@ -110,15 +85,7 @@ class ExperimentTracker:
                                 num_documents: int,
                                 embedding_dim: int,
                                 processing_time: float):
-        """
-        Log embedding generation experiment
-        
-        Args:
-            model_name: Embedding model name
-            num_documents: Number of documents embedded
-            embedding_dim: Embedding dimension
-            processing_time: Time taken to generate embeddings
-        """
+
         run_name = f"embedding_{model_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
         with mlflow.start_run(run_name=run_name):
@@ -131,23 +98,18 @@ class ExperimentTracker:
             mlflow.set_tag("experiment_type", "embedding_generation")
             mlflow.set_tag("timestamp", datetime.now().isoformat())
             
-            logger.info(f"✅ Embedding generation logged: {run_name}")
+            logger.info(f" Embedding generation logged: {run_name}")
     
     def compare_experiments(self, run_ids: list):
-        """
-        Compare multiple experiment runs
-        
-        Args:
-            run_ids: List of MLflow run IDs to compare
-        """
+ 
         logger.info(f"\n{'='*80}")
-        logger.info(f"📊 COMPARING {len(run_ids)} EXPERIMENTS")
+        logger.info(f" COMPARING {len(run_ids)} EXPERIMENTS")
         logger.info(f"{'='*80}\n")
         
         for run_id in run_ids:
             run = mlflow.get_run(run_id)
             
-            print(f"\n🔹 Run: {run.data.tags.get('mlflow.runName', run_id)}")
+            print(f"\n Run: {run.data.tags.get('mlflow.runName', run_id)}")
             print(f"   Run ID: {run_id}")
             print(f"   MRR: {run.data.metrics.get('mrr', 'N/A'):.4f}")
             print(f"   Precision@5: {run.data.metrics.get('precision_at_5', 'N/A'):.4f}")
@@ -155,7 +117,6 @@ class ExperimentTracker:
             print(f"   Embedding Model: {run.data.params.get('embedding_model', 'N/A')}")
 
 
-# Test the tracker
 if __name__ == "__main__":
     import sys
     from pathlib import Path
@@ -164,15 +125,13 @@ if __name__ == "__main__":
     from evaluation.metrics import RetrievalEvaluator
     
     print("\n" + "=" * 80)
-    print("🧪 TESTING MLFLOW EXPERIMENT TRACKING")
+    print(" TESTING MLFLOW EXPERIMENT TRACKING")
     print("=" * 80)
     
-    # Initialize components
     retriever = BaselineRetriever()
     evaluator = RetrievalEvaluator(retriever)
     tracker = ExperimentTracker()
     
-    # Create test queries
     test_queries = [
         {
             'query': 'What is GitLab\'s approach to sustainability?',
@@ -188,10 +147,10 @@ if __name__ == "__main__":
         }
     ]
     
-    print("\n📊 Running evaluation...")
+    print("\n Running evaluation...")
     results = evaluator.evaluate(test_queries, k_values=[1, 3, 5])
     
-    print("\n📝 Logging to MLflow...")
+    print("\n Logging to MLflow...")
     run_id = tracker.log_retrieval_experiment(
         model_name="baseline-retriever-v1",
         embedding_model="all-MiniLM-L6-v2",
@@ -208,10 +167,10 @@ if __name__ == "__main__":
     )
     
     print("\n" + "=" * 80)
-    print("✅ MLFLOW TRACKING TEST COMPLETE!")
+    print(" MLFLOW TRACKING TEST COMPLETE!")
     print("=" * 80)
-    print(f"\n📊 Run ID: {run_id}")
-    print(f"\n💡 To view results in MLflow UI, run:")
+    print(f"\n Run ID: {run_id}")
+    print(f"\n To view results in MLflow UI, run:")
     print(f"   mlflow ui --backend-store-uri file:./experiments/mlruns")
     print(f"   Then open: http://localhost:5000")
     print("\n" + "=" * 80)

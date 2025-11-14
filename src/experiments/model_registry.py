@@ -10,14 +10,12 @@ logger = logging.getLogger(__name__)
 
 class ModelRegistry:
     def __init__(self, registry_dir: str = "models/registry"):
-        """Initialize model registry"""
         self.registry_dir = Path(registry_dir)
         self.registry_dir.mkdir(parents=True, exist_ok=True)
         self.manifest_file = self.registry_dir / "manifest.json"
-        logger.info(f"✅ Model registry initialized: {registry_dir}")
+        logger.info(f" Model registry initialized: {registry_dir}")
     
     def compute_checksum(self, file_path: Path) -> str:
-        """Compute SHA256 checksum of a file"""
         sha256 = hashlib.sha256()
         with open(file_path, 'rb') as f:
             for chunk in iter(lambda: f.read(4096), b''):
@@ -29,18 +27,7 @@ class ModelRegistry:
                       model_version: str,
                       model_dir: str,
                       metadata: dict = None) -> dict:
-        """
-        Register a model version
-        
-        Args:
-            model_name: Name of the model
-            model_version: Version identifier
-            model_dir: Directory containing model artifacts
-            metadata: Additional metadata
-            
-        Returns:
-            Registration details
-        """
+
         logger.info(f"\n{'='*80}")
         logger.info(f"REGISTERING MODEL: {model_name} v{model_version}")
         logger.info(f"{'='*80}")
@@ -50,12 +37,10 @@ class ModelRegistry:
         if not model_dir.exists():
             raise ValueError(f"Model directory not found: {model_dir}")
         
-        # Create version directory
         version_dir = self.registry_dir / model_name / model_version
         version_dir.mkdir(parents=True, exist_ok=True)
         
-        # Copy model artifacts
-        logger.info("📦 Copying model artifacts...")
+        logger.info(" Copying model artifacts...")
         artifacts = {}
         
         for file_path in model_dir.glob("*"):
@@ -63,15 +48,13 @@ class ModelRegistry:
                 dest_path = version_dir / file_path.name
                 shutil.copy2(file_path, dest_path)
                 
-                # Compute checksum
                 checksum = self.compute_checksum(dest_path)
                 artifacts[file_path.name] = {
                     'size_bytes': file_path.stat().st_size,
                     'checksum': checksum
                 }
-                logger.info(f"  ✅ {file_path.name} ({file_path.stat().st_size} bytes)")
+                logger.info(f"   {file_path.name} ({file_path.stat().st_size} bytes)")
         
-        # Create model card
         model_card = {
             'model_name': model_name,
             'model_version': model_version,
@@ -81,18 +64,16 @@ class ModelRegistry:
             'registry_path': str(version_dir)
         }
         
-        # Save model card
         card_path = version_dir / "model_card.json"
         with open(card_path, 'w') as f:
             json.dump(model_card, f, indent=2)
         
-        logger.info(f"\n💾 Model card saved: {card_path}")
+        logger.info(f"\n💾Model card saved: {card_path}")
         
-        # Update manifest
         self._update_manifest(model_name, model_version, model_card)
         
         logger.info(f"\n{'='*80}")
-        logger.info(f"✅ MODEL REGISTERED SUCCESSFULLY")
+        logger.info(f" MODEL REGISTERED SUCCESSFULLY")
         logger.info(f"{'='*80}")
         logger.info(f"Registry path: {version_dir}")
         logger.info(f"Artifacts: {len(artifacts)}")
@@ -100,26 +81,21 @@ class ModelRegistry:
         return model_card
     
     def _update_manifest(self, model_name: str, version: str, model_card: dict):
-        """Update registry manifest"""
-        # Load existing manifest
         if self.manifest_file.exists():
             with open(self.manifest_file, 'r') as f:
                 manifest = json.load(f)
         else:
             manifest = {'models': {}}
         
-        # Add/update model entry
         if model_name not in manifest['models']:
             manifest['models'][model_name] = {'versions': []}
         
-        # Add version
         version_entry = {
             'version': version,
             'registered_at': model_card['registered_at'],
             'artifact_count': len(model_card['artifacts'])
         }
         
-        # Remove old entry if exists
         manifest['models'][model_name]['versions'] = [
             v for v in manifest['models'][model_name]['versions'] 
             if v['version'] != version
@@ -129,14 +105,12 @@ class ModelRegistry:
         manifest['models'][model_name]['latest_version'] = version
         manifest['last_updated'] = datetime.now().isoformat()
         
-        # Save manifest
         with open(self.manifest_file, 'w') as f:
             json.dump(manifest, f, indent=2)
         
-        logger.info(f"📋 Manifest updated: {self.manifest_file}")
+        logger.info(f" Manifest updated: {self.manifest_file}")
     
     def list_models(self):
-        """List all registered models"""
         if not self.manifest_file.exists():
             logger.info("No models registered yet")
             return
@@ -149,7 +123,7 @@ class ModelRegistry:
         print("="*80)
         
         for model_name, details in manifest['models'].items():
-            print(f"\n🔹 {model_name}")
+            print(f"\n {model_name}")
             print(f"   Latest version: {details['latest_version']}")
             print(f"   Total versions: {len(details['versions'])}")
             
@@ -161,9 +135,7 @@ class ModelRegistry:
         print("\n" + "="*80)
     
     def get_model(self, model_name: str, version: str = None) -> dict:
-        """Retrieve model information"""
         if version is None:
-            # Get latest version
             with open(self.manifest_file, 'r') as f:
                 manifest = json.load(f)
             version = manifest['models'][model_name]['latest_version']
@@ -174,15 +146,13 @@ class ModelRegistry:
             return json.load(f)
 
 
-# Register your models
 if __name__ == "__main__":
     print("\n" + "="*80)
-    print("🚀 MODEL REGISTRATION SYSTEM")
+    print(" MODEL REGISTRATION SYSTEM")
     print("="*80)
     
     registry = ModelRegistry()
     
-    # Register embedding model
     print("\n📦 Registering embedding model...")
     embedding_card = registry.register_model(
         model_name="retrieval-embeddings",
@@ -197,10 +167,8 @@ if __name__ == "__main__":
         }
     )
     
-    # Register vector store (just metadata, store is in separate db)
-    print("\n📦 Registering vector store metadata...")
+    print("\n Registering vector store metadata...")
     
-    # Create a metadata file for vector store
     vs_metadata_dir = Path("models/vector_store_metadata")
     vs_metadata_dir.mkdir(parents=True, exist_ok=True)
     
@@ -222,12 +190,11 @@ if __name__ == "__main__":
         metadata=vs_info
     )
     
-    # List all models
     print("\n")
     registry.list_models()
     
     print("\n" + "="*80)
-    print("✅ MODEL REGISTRATION COMPLETE!")
+    print(" MODEL REGISTRATION COMPLETE!")
     print("="*80)
     print("\nNote: In production, these would be pushed to:")
     print("  - GCP Artifact Registry")

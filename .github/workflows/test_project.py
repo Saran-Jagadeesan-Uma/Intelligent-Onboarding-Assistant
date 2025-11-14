@@ -2,7 +2,6 @@ import pytest
 from pathlib import Path
 
 def test_project_structure():
-    """Test that project structure exists"""
     assert Path('src').exists(), "src directory should exist"
     assert Path('src/embeddings').exists(), "embeddings module should exist"
     assert Path('src/retrieval').exists(), "retrieval module should exist"
@@ -11,7 +10,6 @@ def test_project_structure():
     assert Path('README.md').exists(), "README should exist"
 
 def test_requirements_file():
-    """Test that requirements.txt exists and is not empty"""
     req_path = Path('requirements.txt')
     assert req_path.exists(), "requirements.txt should exist"
     
@@ -21,12 +19,10 @@ def test_requirements_file():
     assert 'sentence-transformers' in content, "Should include sentence-transformers"
 
 def test_model_directories():
-    """Test that model directories exist"""
     assert Path('models').exists(), "models directory should exist"
     assert Path('experiments').exists(), "experiments directory should exist"
 
 def test_documentation():
-    """Test that key documentation exists"""
     readme = Path('README.md')
     assert readme.exists(), "README.md should exist"
     
@@ -36,7 +32,6 @@ def test_documentation():
     assert 'Installation' in content or 'Setup' in content, "README should have setup instructions"
 
 def test_imports_available():
-    """Test that key imports work"""
     try:
         import numpy
         assert True

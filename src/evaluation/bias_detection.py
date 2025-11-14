@@ -9,34 +9,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BiasDetector:
-    """Detect bias in retrieval system across data slices"""
     
     def __init__(self, retriever):
-        """
-        Initialize bias detector
-        
-        Args:
-            retriever: Retriever instance to analyze
-        """
+
         self.retriever = retriever
-        logger.info("✅ BiasDetector initialized")
+        logger.info(" BiasDetector initialized")
     
     def analyze_source_bias(self, test_queries: List[Dict], k: int = 5) -> Dict:
-        """
-        Analyze bias across different data sources
-        
-        Args:
-            test_queries: List of test queries with relevant_ids
-            k: Number of documents to retrieve
-            
-        Returns:
-            Dictionary with bias analysis results
-        """
+
         logger.info("\n" + "=" * 80)
-        logger.info("🔍 ANALYZING SOURCE BIAS")
+        logger.info(" ANALYZING SOURCE BIAS")
         logger.info("=" * 80)
         
-        # Track metrics by source type
         source_stats = defaultdict(lambda: {
             'retrieved_count': 0,
             'total_retrievals': 0,
@@ -44,7 +28,6 @@ class BiasDetector:
             'avg_similarity': []
         })
         
-        # Analyze each query
         for query_data in test_queries:
             query = query_data['query']
             results = self.retriever.retrieve(query, k=k)
@@ -56,7 +39,6 @@ class BiasDetector:
                 source_stats[source]['avg_rank'].append(rank)
                 source_stats[source]['avg_similarity'].append(doc['similarity'])
         
-        # Calculate aggregated metrics
         bias_report = {}
         for source, stats in source_stats.items():
             bias_report[source] = {
@@ -66,7 +48,7 @@ class BiasDetector:
                 'avg_similarity': np.mean(stats['avg_similarity']) if stats['avg_similarity'] else 0
             }
         
-        logger.info("\n📊 Source Distribution:")
+        logger.info("\n Source Distribution:")
         for source, metrics in bias_report.items():
             logger.info(f"\n  {source}:")
             logger.info(f"    • Retrieved: {metrics['total_retrieved']} times")
@@ -77,18 +59,9 @@ class BiasDetector:
         return bias_report
     
     def analyze_title_bias(self, test_queries: List[Dict], k: int = 5) -> Dict:
-        """
-        Analyze bias across document titles/types
-        
-        Args:
-            test_queries: List of test queries
-            k: Number of documents to retrieve
-            
-        Returns:
-            Dictionary with title-based bias analysis
-        """
+
         logger.info("\n" + "=" * 80)
-        logger.info("🔍 ANALYZING TITLE/CONTENT TYPE BIAS")
+        logger.info(" ANALYZING TITLE/CONTENT TYPE BIAS")
         logger.info("=" * 80)
         
         title_stats = defaultdict(lambda: {
@@ -105,12 +78,11 @@ class BiasDetector:
                 title_stats[title]['count'] += 1
                 title_stats[title]['avg_similarity'].append(doc['similarity'])
         
-        # Sort by count
         sorted_titles = sorted(title_stats.items(), 
                               key=lambda x: x[1]['count'], 
                               reverse=True)
         
-        logger.info(f"\n📊 Top Retrieved Titles:")
+        logger.info(f"\n Top Retrieved Titles:")
         for title, stats in sorted_titles[:10]:
             avg_sim = np.mean(stats['avg_similarity'])
             logger.info(f"  • {title[:50]:50s} | Count: {stats['count']:2d} | Avg Sim: {avg_sim:.4f}")
@@ -120,25 +92,15 @@ class BiasDetector:
     def detect_performance_disparity(self, 
                                     bias_report: Dict, 
                                     threshold: float = 0.2) -> Dict:
-        """
-        Detect significant performance disparities across slices
-        
-        Args:
-            bias_report: Bias analysis results
-            threshold: Threshold for flagging disparity
-            
-        Returns:
-            Dictionary with disparity findings
-        """
+
         logger.info("\n" + "=" * 80)
-        logger.info("⚠️  CHECKING FOR PERFORMANCE DISPARITIES")
+        logger.info("  CHECKING FOR PERFORMANCE DISPARITIES")
         logger.info("=" * 80)
         
         if not bias_report:
             logger.info("No bias data to analyze")
             return {}
         
-        # Calculate overall average similarity
         all_similarities = [metrics['avg_similarity'] 
                            for metrics in bias_report.values()]
         overall_avg = np.mean(all_similarities)
@@ -155,32 +117,22 @@ class BiasDetector:
                     'percentage_diff': (diff / overall_avg) * 100
                 }
                 
-                logger.warning(f"\n  ⚠️  DISPARITY DETECTED: {source}")
+                logger.warning(f"\n    DISPARITY DETECTED: {source}")
                 logger.warning(f"      Source avg: {metrics['avg_similarity']:.4f}")
                 logger.warning(f"      Overall avg: {overall_avg:.4f}")
                 logger.warning(f"      Difference: {diff:.4f} ({disparities[source]['percentage_diff']:.1f}%)")
         
         if not disparities:
-            logger.info("\n  ✅ No significant disparities detected!")
+            logger.info("\n   No significant disparities detected!")
         
         return disparities
     
     def generate_bias_report(self, test_queries: List[Dict], k: int = 5) -> Dict:
-        """
-        Generate comprehensive bias report
-        
-        Args:
-            test_queries: List of test queries
-            k: Number of documents to retrieve
-            
-        Returns:
-            Complete bias analysis report
-        """
+
         logger.info("\n" + "=" * 80)
-        logger.info("📋 GENERATING COMPREHENSIVE BIAS REPORT")
+        logger.info(" GENERATING COMPREHENSIVE BIAS REPORT")
         logger.info("=" * 80)
         
-        # Run analyses
         source_bias = self.analyze_source_bias(test_queries, k=k)
         title_bias = self.analyze_title_bias(test_queries, k=k)
         disparities = self.detect_performance_disparity(source_bias)
@@ -195,23 +147,21 @@ class BiasDetector:
         }
         
         logger.info("\n" + "=" * 80)
-        logger.info("✅ BIAS REPORT COMPLETE")
+        logger.info(" BIAS REPORT COMPLETE")
         logger.info("=" * 80)
         
         return report
     
     def save_report(self, report: Dict, output_path: str = "experiments/bias_report.json"):
-        """Save bias report to file"""
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         with open(output_file, 'w') as f:
             json.dump(report, f, indent=2)
         
-        logger.info(f"\n💾 Bias report saved to: {output_path}")
+        logger.info(f"\n Bias report saved to: {output_path}")
 
 
-# Test bias detection
 if __name__ == "__main__":
     import sys
     from pathlib import Path
@@ -219,14 +169,12 @@ if __name__ == "__main__":
     from retrieval.retriever import BaselineRetriever
     
     print("\n" + "=" * 80)
-    print("🧪 TESTING BIAS DETECTION")
+    print(" TESTING BIAS DETECTION")
     print("=" * 80)
     
-    # Initialize
     retriever = BaselineRetriever()
     detector = BiasDetector(retriever)
     
-    # Test queries
     test_queries = [
         {'query': 'What is GitLab\'s approach to sustainability?', 'relevant_ids': ['doc_8']},
         {'query': 'How does risk management work at GitLab?', 'relevant_ids': ['doc_12']},
@@ -235,23 +183,20 @@ if __name__ == "__main__":
         {'query': 'How does legal compliance work?', 'relevant_ids': []},
     ]
     
-    # Generate report
     report = detector.generate_bias_report(test_queries, k=5)
     
-    # Save report
     detector.save_report(report)
     
-    # Summary
     print("\n" + "=" * 80)
-    print("📊 BIAS DETECTION SUMMARY")
+    print(" BIAS DETECTION SUMMARY")
     print("=" * 80)
     print(f"  • Queries analyzed: {report['num_queries']}")
     print(f"  • Sources found: {len(report['source_bias'])}")
-    print(f"  • Significant bias detected: {'YES ⚠️' if report['has_significant_bias'] else 'NO ✅'}")
+    print(f"  • Significant bias detected: {'YES ' if report['has_significant_bias'] else 'NO '}")
     
     if report['disparities']:
-        print(f"\n  ⚠️  Disparities found in {len(report['disparities'])} source(s)")
+        print(f"\n    Disparities found in {len(report['disparities'])} source(s)")
     
     print("\n" + "=" * 80)
-    print("✅ BIAS DETECTION TEST COMPLETE!")
+    print(" BIAS DETECTION TEST COMPLETE!")
     print("=" * 80)

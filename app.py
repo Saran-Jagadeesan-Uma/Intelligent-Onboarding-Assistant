@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import sys
 from pathlib import Path
+import warnings
+warnings.filterwarnings('ignore')
 
 sys.path.insert(0, str(Path(__file__).parent))
 

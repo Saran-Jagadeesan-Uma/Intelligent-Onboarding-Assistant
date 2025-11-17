@@ -320,16 +320,6 @@ Team 13:
 - MRR (Mean Reciprocal Rank)
 - Bias analysis across data slices
 
-## 🚀 Future Enhancements
-
-- Hybrid retrieval (BM25 + vector search)
-- Cross-encoder reranking
-- Query expansion
-- Multi-language support
-- Larger dataset (1000+ documents)
-- CI/CD automation with GitHub Actions
-- Production deployment (FastAPI + Docker)
-
 ## 📄 License
 
 This project is part of an academic assignment for MLOps coursework.
@@ -339,4 +329,4 @@ This project is part of an academic assignment for MLOps coursework.
 - GitHub Repository: https://github.com/LakshmiVadhanie/Intelligent-Onboarding-Assistant
 - MLflow Dashboard: http://localhost:5000 (when running)
 
-Last Updated: November 12, 2025
+Last Updated: November 17, 2025

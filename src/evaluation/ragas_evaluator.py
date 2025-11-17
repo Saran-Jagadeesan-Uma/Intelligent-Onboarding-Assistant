@@ -12,6 +12,7 @@ import numpy as np
 from typing import List, Dict
 import logging
 import json
+import os
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
@@ -20,22 +21,36 @@ logger = logging.getLogger(__name__)
 class RAGASEvaluator:
     
     def __init__(self):
-        """Initialize RAGAS evaluator"""
         self.metrics = [
             faithfulness,
             answer_relevancy,
             context_precision,
             context_recall
         ]
-        logger.info(" RAGAS Evaluator initialized")
-        logger.info(f"   Metrics: {[m.name for m in self.metrics]}")
+        
+        self.api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        self.llm = None
+        
+        if self.api_key:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=self.api_key)
+                self.llm = genai.GenerativeModel('gemini-2.0-flash')
+                logger.info("RAGAS Evaluator initialized with Gemini API (gemini-2.0-flash)")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Gemini: {e}")
+                logger.info("RAGAS Evaluator initialized without LLM")
+        else:
+            logger.info("RAGAS Evaluator initialized without API key")
+        
+        logger.info(f"Metrics: {[m.name for m in self.metrics]}")
     
     def evaluate_retrieval_only(self, 
                                 retriever,
                                 test_data: List[Dict]) -> Dict:
         
         logger.info("\n" + "="*80)
-        logger.info(" RAGAS EVALUATION (RETRIEVAL-ONLY MODE)")
+        logger.info("RAGAS EVALUATION (RETRIEVAL-ONLY MODE)")
         logger.info("="*80)
         
         results_data = []
@@ -49,7 +64,17 @@ class RAGASEvaluator:
             retrieved_docs = retriever.retrieve(question, k=5)
             contexts = [doc['document'] for doc in retrieved_docs]
             
-            synthetic_answer = f"Based on the retrieved documents: {contexts[0][:200]}..."
+            if self.llm and contexts:
+                try:
+                    prompt = f"Based on these documents, answer the question: {question}\n\nDocuments:\n{contexts[0][:500]}"
+                    response = self.llm.generate_content(prompt)
+                    synthetic_answer = response.text
+                    logger.info("Generated answer using Gemini")
+                except Exception as e:
+                    logger.warning(f"Gemini generation failed: {e}")
+                    synthetic_answer = f"Based on the retrieved documents: {contexts[0][:200]}..."
+            else:
+                synthetic_answer = f"Based on the retrieved documents: {contexts[0][:200]}..."
             
             results_data.append({
                 'question': question,
@@ -60,56 +85,68 @@ class RAGASEvaluator:
         
         dataset = Dataset.from_pandas(pd.DataFrame(results_data))
         
-        logger.info("\n Running RAGAS evaluation...")
+        logger.info("\nRunning RAGAS evaluation...")
         
         context_metrics = [context_precision, context_recall]
         
         try:
-            evaluation_results = evaluate(
-                dataset,
-                metrics=context_metrics
-            )
-            
-            logger.info(" RAGAS evaluation complete!")
-            
-            results_dict = {
-                'num_queries': len(test_data),
-                'metrics': {}
-            }
-            
-            for metric_name, value in evaluation_results.items():
-                results_dict['metrics'][metric_name] = float(value)
-                logger.info(f"  {metric_name}: {value:.4f}")
-            
-            return results_dict
+            if self.api_key:
+                evaluation_results = evaluate(
+                    dataset,
+                    metrics=context_metrics
+                )
+                
+                logger.info("RAGAS evaluation complete!")
+                
+                results_dict = {
+                    'num_queries': len(test_data),
+                    'metrics': {},
+                    'using_gemini': True
+                }
+                
+                for metric_name, value in evaluation_results.items():
+                    results_dict['metrics'][metric_name] = float(value)
+                    logger.info(f"{metric_name}: {value:.4f}")
+                
+                return results_dict
+            else:
+                raise Exception("No API key available")
             
         except Exception as e:
-            logger.error(f" RAGAS evaluation failed: {e}")
-            logger.warning("  RAGAS requires LLM for full evaluation")
-            logger.warning("   Falling back to custom metrics...")
+            error_msg = str(e).lower()
+            
+            if 'api_key' in error_msg or 'api' in error_msg:
+                logger.info("RAGAS requires LLM API for full evaluation")
+                logger.info("Using custom context-based metrics instead")
+            else:
+                logger.warning(f"RAGAS evaluation error: {e}")
+                logger.info("Falling back to custom metrics...")
             
             return self._custom_context_metrics(results_data)
     
     def _custom_context_metrics(self, results_data: List[Dict]) -> Dict:
-
-        logger.info("📊 Computing custom context metrics...")
+        
+        logger.info("Computing custom context metrics...")
         
         metrics = {
             'num_queries': len(results_data),
-            'avg_contexts_retrieved': np.mean([len(item['contexts']) for item in results_data]),
-            'context_coverage': self._calculate_context_coverage(results_data),
-            'context_diversity': self._calculate_context_diversity(results_data)
+            'avg_contexts_retrieved': float(np.mean([len(item['contexts']) for item in results_data])),
+            'context_coverage': float(self._calculate_context_coverage(results_data)),
+            'context_diversity': float(self._calculate_context_diversity(results_data))
         }
         
-        logger.info(f"\n Custom Metrics:")
-        logger.info(f"  Avg contexts retrieved: {metrics['avg_contexts_retrieved']:.2f}")
-        logger.info(f"  Context coverage: {metrics['context_coverage']:.4f}")
-        logger.info(f"  Context diversity: {metrics['context_diversity']:.4f}")
+        logger.info("Custom metrics computed:")
+        logger.info(f"Avg contexts: {metrics['avg_contexts_retrieved']:.2f}")
+        logger.info(f"Context coverage: {metrics['context_coverage']:.4f}")
+        logger.info(f"Context diversity: {metrics['context_diversity']:.4f}")
         
-        return {'metrics': metrics}
+        return {
+            'metrics': metrics, 
+            'num_queries': len(results_data),
+            'using_gemini': False
+        }
     
     def _calculate_context_coverage(self, results_data: List[Dict]) -> float:
-        import numpy as np
         
         coverages = []
         for item in results_data:
@@ -125,7 +162,6 @@ class RAGASEvaluator:
         return np.mean(coverages) if coverages else 0.0
     
     def _calculate_context_diversity(self, results_data: List[Dict]) -> float:
-        import numpy as np
         
         diversities = []
         for item in results_data:
@@ -144,26 +180,26 @@ class RAGASEvaluator:
         return np.mean(diversities) if diversities else 0.0
     
     def save_results(self, results: Dict, output_path: str = "experiments/ragas_evaluation.json"):
-        """Save RAGAS results"""
+        
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         with open(output_file, 'w') as f:
             json.dump(results, f, indent=2)
         
-        logger.info(f"\n RAGAS results saved: {output_path}")
+        logger.info(f"\nRAGAS results saved: {output_path}")
 
 
 if __name__ == "__main__":
     import sys
     from pathlib import Path
-    import numpy as np
+    
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     from retrieval.advanced_retriever import AdvancedRetriever
     
     print("\n" + "="*80)
-    print(" TESTING RAGAS EVALUATION FRAMEWORK")
+    print("TESTING RAGAS EVALUATION FRAMEWORK")
     print("="*80)
     
     retriever = AdvancedRetriever()
@@ -184,24 +220,30 @@ if __name__ == "__main__":
         }
     ]
     
-    print("\n  NOTE: RAGAS requires OpenAI API for full evaluation")
-    print("Without API key, we'll use custom context-based metrics instead.\n")
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    if api_key:
+        print("\nGemini API key found - using gemini-2.0-flash for evaluation")
+    else:
+        print("\nNo API key - using custom context-based metrics")
     
     results = evaluator.evaluate_retrieval_only(retriever, test_data)
     
     print("\n" + "="*80)
-    print(" RAGAS EVALUATION RESULTS")
+    print("RAGAS EVALUATION RESULTS")
     print("="*80)
     
     if 'metrics' in results:
         for metric_name, value in results['metrics'].items():
-            print(f"  • {metric_name}: {value:.4f}")
+            if isinstance(value, (int, float)):
+                print(f"{metric_name}: {value:.4f}")
+            else:
+                print(f"{metric_name}: {value}")
+    
+    print(f"\nTotal queries evaluated: {results.get('num_queries', 0)}")
+    print(f"Using Gemini: {results.get('using_gemini', False)}")
     
     evaluator.save_results(results)
     
     print("\n" + "="*80)
-    print(" RAGAS EVALUATION COMPLETE!")
-    print("="*80)
-    print("\n  For full RAGAS metrics (faithfulness, answer_relevancy),")
-    print("   set OPENAI_API_KEY environment variable.")
-    print("="*80)
+    print("RAGAS EVALUATION COMPLETE")
+    print("="*80 + "\n")

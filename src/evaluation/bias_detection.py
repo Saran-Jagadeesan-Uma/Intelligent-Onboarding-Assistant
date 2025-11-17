@@ -829,4 +829,4 @@ class BiasDetector:
         logger.info(f"   Std deviation: {std_similarity:.4f}")
         logger.info(f"   Significant bias: {has_significant_bias}")
         
-        return reports
+        return report

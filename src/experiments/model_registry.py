@@ -159,7 +159,7 @@ if __name__ == "__main__":
         model_version="v1.0.0",
         model_dir="models/embeddings",
         metadata={
-            'embedding_model': 'all-MiniLM-L6-v2',
+            'embedding_model': 'all-mpnet-base-v2',
             'embedding_dim': 384,
             'num_documents': 19,
             'framework': 'sentence-transformers',

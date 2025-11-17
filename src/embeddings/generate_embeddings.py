@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class EmbeddingGenerator:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, model_name: str = "all-mpnet-base-v2"):
  
         logger.info(f"Loading embedding model: {model_name}")
         self.model = SentenceTransformer(model_name)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     logger.info("\n" + "=" * 60)
     logger.info("STEP 2: Generating embeddings...")
     logger.info("=" * 60)
-    embedding_gen = EmbeddingGenerator(model_name="all-MiniLM-L6-v2")
+    embedding_gen = EmbeddingGenerator(model_name="all-mpnet-base-v2")
     texts, embeddings, metadata = embedding_gen.process_chunks(chunks)
     
     logger.info("\n" + "=" * 60)

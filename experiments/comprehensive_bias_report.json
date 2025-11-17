@@ -11,66 +11,66 @@
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.2632280099391937,
+      "avg_similarity": 0.2543561363220214,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.14404096235683525
+      "std_similarity": 0.14642328838849616
     },
     "hr_policies": {
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.1726567935943603,
+      "avg_similarity": 0.19414151072502137,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.061167716802494325
+      "std_similarity": 0.050465468039558654
     },
     "company_culture": {
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.28665242791175843,
+      "avg_similarity": 0.32957114100456236,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.1266356464536037
+      "std_similarity": 0.13184945305294815
     },
     "legal_compliance": {
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.284450124502182,
+      "avg_similarity": 0.2991203546524048,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.09979501725615067
+      "std_similarity": 0.10609964368991369
     },
     "management": {
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.2108000099658966,
+      "avg_similarity": 0.2133000707626343,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.0487103139079715
+      "std_similarity": 0.02015132527879076
     },
     "sales_marketing": {
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
       "f1": 0.0,
-      "avg_similarity": 0.19568789005279544,
+      "avg_similarity": 0.21028077840805057,
       "num_queries": 10,
       "total_relevant_found": 0,
       "std_precision": 0.0,
-      "std_similarity": 0.04999198012077734
+      "std_similarity": 0.06396099019933889
     }
   },
   "source_distribution": {
@@ -78,80 +78,80 @@
       "total_retrieved": 300,
       "retrieval_rate": 1.0,
       "avg_rank": 3.0,
-      "avg_similarity": 0.23557920932769774,
+      "avg_similarity": 0.2501283319791158,
       "query_coverage": 1.0
     }
   },
   "title_distribution": {
     "CI/CD UX Meeting - 08/02/2023": {
-      "count": 48,
-      "avg_similarity": 0.18923777093489966,
-      "avg_rank": 2.7291666666666665
-    },
-    "Stategy & Legal Operations": {
-      "count": 34,
-      "avg_similarity": 0.25848351156010346,
-      "avg_rank": 2.823529411764706
-    },
-    "Commercial Legal": {
-      "count": 29,
-      "avg_similarity": 0.25801192069875784,
-      "avg_rank": 3.3448275862068964
-    },
-    "Risk Management and Dispute Resolution (RMDR)": {
-      "count": 25,
-      "avg_similarity": 0.22817131757736206,
-      "avg_rank": 2.56
-    },
-    "Legal, Employment at GitLab: A Strategic Partnership": {
-      "count": 24,
-      "avg_similarity": 0.22000343600908914,
-      "avg_rank": 3.2916666666666665
-    },
-    "CI/CD UX Meeting - 2024-01-17": {
-      "count": 24,
-      "avg_similarity": 0.18498226255178452,
-      "avg_rank": 3.75
-    },
-    "Trade Compliance": {
-      "count": 23,
-      "avg_similarity": 0.274535842563795,
-      "avg_rank": 2.5652173913043477
-    },
-    "Sustainability": {
-      "count": 21,
-      "avg_similarity": 0.2313989627928961,
-      "avg_rank": 2.9523809523809526
+      "count": 66,
+      "avg_similarity": 0.23615027648029904,
+      "avg_rank": 2.6818181818181817
     },
     "CI/CD UX Meeting 2023-07-19": {
-      "count": 17,
-      "avg_similarity": 0.18288566084469066,
-      "avg_rank": 3.5294117647058822
+      "count": 37,
+      "avg_similarity": 0.21243005668794787,
+      "avg_rank": 3.0
     },
-    "CI/CD UX Team Meeting - 2023-12-20": {
-      "count": 16,
-      "avg_similarity": 0.2310810312628746,
-      "avg_rank": 3.125
+    "Commercial Legal": {
+      "count": 34,
+      "avg_similarity": 0.25331898647196155,
+      "avg_rank": 2.823529411764706
+    },
+    "Stategy & Legal Operations": {
+      "count": 23,
+      "avg_similarity": 0.2709292251130809,
+      "avg_rank": 3.0869565217391304
+    },
+    "Legal, Employment at GitLab: A Strategic Partnership": {
+      "count": 21,
+      "avg_similarity": 0.2345173188618251,
+      "avg_rank": 2.761904761904762
     },
     "GitLab Privacy": {
-      "count": 14,
-      "avg_similarity": 0.30264020391872953,
-      "avg_rank": 3.357142857142857
+      "count": 17,
+      "avg_similarity": 0.3058461020974552,
+      "avg_rank": 3.176470588235294
     },
-    "Product and Intellectual Property": {
-      "count": 10,
-      "avg_similarity": 0.27127234935760497,
-      "avg_rank": 3.6
+    "Sustainability": {
+      "count": 17,
+      "avg_similarity": 0.2428024130709031,
+      "avg_rank": 3.176470588235294
     },
-    "CI/CD UX Meeting Part II - 2023-09-13": {
-      "count": 8,
-      "avg_similarity": 0.16398823261260986,
+    "CI/CD UX Meeting - 2024-01-17": {
+      "count": 17,
+      "avg_similarity": 0.189466795500587,
+      "avg_rank": 4.411764705882353
+    },
+    "Trade Compliance": {
+      "count": 16,
+      "avg_similarity": 0.28164852783083916,
       "avg_rank": 2.75
     },
+    "Risk Management and Dispute Resolution (RMDR)": {
+      "count": 16,
+      "avg_similarity": 0.2448442205786705,
+      "avg_rank": 2.6875
+    },
+    "CI/CD UX Team Meeting - 2023-12-20": {
+      "count": 13,
+      "avg_similarity": 0.1834756823686453,
+      "avg_rank": 4.153846153846154
+    },
     "Corporate & Compliance Legal": {
-      "count": 7,
-      "avg_similarity": 0.5219967791012355,
-      "avg_rank": 1.0
+      "count": 9,
+      "avg_similarity": 0.4257119496663411,
+      "avg_rank": 1.3333333333333333
+    },
+    "Product and Intellectual Property": {
+      "count": 8,
+      "avg_similarity": 0.43473073840141296,
+      "avg_rank": 3.625
+    },
+    "CI/CD UX Meeting Part II - 2023-09-13": {
+      "count": 6,
+      "avg_similarity": 0.19288437565167746,
+      "avg_rank": 3.6666666666666665
     }
   },
   "coverage_analysis": {
@@ -196,41 +196,41 @@
     "disparities": {
       "hr_policies": {
         "avg_similarity": {
-          "category_value": 0.1726567935943603,
-          "overall_value": 0.23557920932769774,
-          "absolute_diff": -0.06292241573333743,
-          "relative_diff": 0.26709664198681665,
-          "percentage_diff": 26.709664198681665,
+          "category_value": 0.19414151072502137,
+          "overall_value": 0.25012833197911577,
+          "absolute_diff": -0.055986821254094404,
+          "relative_diff": 0.22383238560423843,
+          "percentage_diff": 22.383238560423845,
           "performance": "underperforming"
         }
       },
       "company_culture": {
         "avg_similarity": {
-          "category_value": 0.28665242791175843,
-          "overall_value": 0.23557920932769774,
-          "absolute_diff": 0.05107321858406069,
-          "relative_diff": 0.21679849732841372,
-          "percentage_diff": 21.679849732841372,
+          "category_value": 0.32957114100456236,
+          "overall_value": 0.25012833197911577,
+          "absolute_diff": 0.07944280902544659,
+          "relative_diff": 0.31760819894676945,
+          "percentage_diff": 31.760819894676946,
           "performance": "overperforming"
         }
       },
       "legal_compliance": {
         "avg_similarity": {
-          "category_value": 0.284450124502182,
-          "overall_value": 0.23557920932769774,
-          "absolute_diff": 0.04887091517448425,
-          "relative_diff": 0.207450034805505,
-          "percentage_diff": 20.7450034805505,
+          "category_value": 0.2991203546524048,
+          "overall_value": 0.25012833197911577,
+          "absolute_diff": 0.048992022673289004,
+          "relative_diff": 0.19586754641365275,
+          "percentage_diff": 19.586754641365275,
           "performance": "overperforming"
         }
       },
       "sales_marketing": {
         "avg_similarity": {
-          "category_value": 0.19568789005279544,
-          "overall_value": 0.23557920932769774,
-          "absolute_diff": -0.039891319274902304,
-          "relative_diff": 0.16933293641975122,
-          "percentage_diff": 16.933293641975123,
+          "category_value": 0.21028077840805057,
+          "overall_value": 0.25012833197911577,
+          "absolute_diff": -0.0398475535710652,
+          "relative_diff": 0.1593084368163149,
+          "percentage_diff": 15.93084368163149,
           "performance": "underperforming"
         }
       }
@@ -239,7 +239,7 @@
       "precision": 0.0,
       "recall": 0.0,
       "mrr": 0.0,
-      "avg_similarity": 0.23557920932769774
+      "avg_similarity": 0.25012833197911577
     },
     "has_significant_bias": true,
     "num_biased_categories": 4

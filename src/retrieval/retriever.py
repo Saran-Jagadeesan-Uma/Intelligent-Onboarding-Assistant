@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class BaselineRetriever:
     def __init__(self, 
-                 embedding_model: str = "all-MiniLM-L6-v2",
+                 embedding_model: str = "all-mpnet-base-v2",
                  vector_store_dir: str = "models/vector_store",
                  collection_name: str = "gitlab_onboarding"):
 

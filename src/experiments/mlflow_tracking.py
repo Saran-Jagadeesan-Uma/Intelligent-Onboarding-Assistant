@@ -153,7 +153,7 @@ if __name__ == "__main__":
     print("\n Logging to MLflow...")
     run_id = tracker.log_retrieval_experiment(
         model_name="baseline-retriever-v1",
-        embedding_model="all-MiniLM-L6-v2",
+        embedding_model="all-mpnet-base-v2",
         vector_store="chromadb",
         eval_results=results,
         params={

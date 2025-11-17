@@ -11,7 +11,7 @@ class AdvancedRetriever:
     """Advanced retriever with cross-encoder reranking"""
     
     def __init__(self, 
-                 embedding_model: str = "all-MiniLM-L6-v2",
+                 embedding_model: str = "all-mpnet-base-v2",
                  reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
                  vector_store_dir: str = "models/vector_store",
                  collection_name: str = "gitlab_onboarding"):

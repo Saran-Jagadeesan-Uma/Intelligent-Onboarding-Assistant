@@ -485,7 +485,6 @@ python -m mlflow ui --backend-store-uri file:./experiments/mlruns
 | **RAGAS evaluation** | `python -m src.evaluation.ragas_evaluator` |
 | **Track experiments** | `python -m src.experiments.mlflow_tracking` |
 | **View MLflow UI** | `python -m mlflow ui --backend-store-uri file:./experiments/mlruns` |
-| **Interactive demo** | `python demo.py` |
 | **Web UI** | `python -m streamlit run app.py` |
 | **Docker build** | `docker build -t onboarding-assistant:latest .` |
 | **Docker run** | `docker run --rm onboarding-assistant:latest` |

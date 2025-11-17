@@ -3,6 +3,8 @@ from pathlib import Path
 import logging
 import time
 import os
+from dotenv import load_dotenv 
+load_dotenv()
 
 sys.path.insert(0, str(Path(__file__).parent))
 

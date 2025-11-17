@@ -362,7 +362,7 @@ def run_all_tests():
     print("=" * 80)
     
     if passed_count == total_count:
-        print("\n ALL TESTS PASSED! PIPELINE 100% COMPLETE! 🎉")
+        print("\n ALL TESTS PASSED!")
         print("\n Next steps:")
         print("   - Run: python -m streamlit run app.py (web UI)")
         print("   - Run: python -m mlflow ui (view experiments)")

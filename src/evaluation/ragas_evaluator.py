@@ -35,8 +35,8 @@ class RAGASEvaluator:
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=self.api_key)
-                self.llm = genai.GenerativeModel('gemini-pro')
-                logger.info("RAGAS Evaluator initialized with Gemini API")
+                self.llm = genai.GenerativeModel('gemini-2.0-flash')
+                logger.info("RAGAS Evaluator initialized with Gemini API (gemini-2.0-flash)")
             except Exception as e:
                 logger.warning(f"Failed to initialize Gemini: {e}")
                 logger.info("RAGAS Evaluator initialized without LLM")
@@ -69,6 +69,7 @@ class RAGASEvaluator:
                     prompt = f"Based on these documents, answer the question: {question}\n\nDocuments:\n{contexts[0][:500]}"
                     response = self.llm.generate_content(prompt)
                     synthetic_answer = response.text
+                    logger.info("Generated answer using Gemini")
                 except Exception as e:
                     logger.warning(f"Gemini generation failed: {e}")
                     synthetic_answer = f"Based on the retrieved documents: {contexts[0][:200]}..."
@@ -221,7 +222,7 @@ if __name__ == "__main__":
     
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if api_key:
-        print("\nGemini API key found - using Gemini for evaluation")
+        print("\nGemini API key found - using gemini-2.0-flash for evaluation")
     else:
         print("\nNo API key - using custom context-based metrics")
     

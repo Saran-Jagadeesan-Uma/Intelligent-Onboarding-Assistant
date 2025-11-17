@@ -1,8 +1,3 @@
-"""
-Streamlit UI for Intelligent Onboarding Assistant
-Beautiful, modern interface for RAG-powered Q&A
-"""
-
 import streamlit as st
 import os
 import sys
@@ -12,7 +7,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.generation.rag_pipeline import UniversalRAGPipeline
 
-# Page configuration
 st.set_page_config(
     page_title="GitLab Onboarding Assistant",
     page_icon="🚀",
@@ -20,7 +14,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern look
 st.markdown("""
     <style>
     .main {
@@ -91,7 +84,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
 if 'rag_pipeline' not in st.session_state:
     st.session_state.rag_pipeline = None
 if 'chat_history' not in st.session_state:
@@ -103,14 +95,12 @@ def initialize_pipeline():
     """Initialize RAG pipeline with Gemini"""
     return UniversalRAGPipeline(provider="gemini")
 
-# Sidebar
 with st.sidebar:
     st.image("https://about.gitlab.com/images/press/logo/png/gitlab-logo-gray-rgb.png", width=200)
     
     st.markdown("## 🚀 GitLab Onboarding Assistant")
     st.markdown("---")
     
-    # API Key status
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     
     if api_key:
@@ -130,7 +120,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Stats
     st.markdown("### 📊 Session Stats")
     col1, col2 = st.columns(2)
     with col1:
@@ -151,7 +140,6 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Example questions
     st.markdown("### 💡 Example Questions")
     examples = [
         "What is GitLab's sustainability approach?",
@@ -176,17 +164,14 @@ with st.sidebar:
     st.caption("Built with ❤️ by Team 13")
     st.caption("Powered by Gemini 2.0")
 
-# Main content
 st.title("🚀 GitLab Onboarding Assistant")
 st.markdown("### Ask me anything about GitLab's policies, processes, and culture!")
 
-# Initialize pipeline on first run
 if st.session_state.rag_pipeline is None:
     with st.spinner("🔄 Loading RAG pipeline..."):
         st.session_state.rag_pipeline = initialize_pipeline()
     st.success("✅ Pipeline loaded! Ready for questions.")
 
-# Query input
 query_input = st.text_input(
     "Your Question:",
     placeholder="e.g., What is GitLab's approach to sustainability?",
@@ -194,32 +179,25 @@ query_input = st.text_input(
     label_visibility="collapsed"
 )
 
-# Check if there's a query from example buttons
 if 'current_query' in st.session_state and st.session_state.current_query:
     query_input = st.session_state.current_query
     st.session_state.current_query = None
 
-# Search button
 col1, col2, col3 = st.columns([3, 1, 3])
 
 with col2:
     search_button = st.button("🔍 Ask", use_container_width=True)
 
-# Process query
 if search_button and query_input:
     st.session_state.total_queries += 1
     
     with st.spinner("🤔 Thinking..."):
-        # Generate answer
         result = st.session_state.rag_pipeline.generate_answer(query_input, k=3)
         
-        # Add to history
         st.session_state.chat_history.insert(0, result)
     
-    # Display result
     st.markdown("---")
     
-    # Answer
     st.markdown("### 💡 Answer")
     st.markdown(f"""
     <div class="answer-box">
@@ -227,7 +205,6 @@ if search_button and query_input:
     </div>
     """, unsafe_allow_html=True)
     
-    # Sources
     st.markdown("### 📚 Sources")
     
     for i, doc in enumerate(result['sources'], 1):
@@ -247,7 +224,6 @@ if search_button and query_input:
 elif search_button:
     st.warning("⚠️ Please enter a question!")
 
-# Display chat history
 if st.session_state.chat_history:
     st.markdown("---")
     st.markdown("### 📜 Recent Questions")
@@ -257,7 +233,6 @@ if st.session_state.chat_history:
             st.markdown(f"**Answer:** {item['answer']}")
             st.caption(f"Sources: {item['num_sources']} | Provider: {item.get('provider', 'N/A')} | Model: {item.get('model', 'N/A')}")
 
-# Footer
 st.markdown("---")
 col1, col2, col3 = st.columns(3)
 

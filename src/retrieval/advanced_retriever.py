@@ -1,8 +1,3 @@
-"""
-Advanced Retriever with Cross-Encoder Reranking
-Improves retrieval accuracy by reranking top candidates
-"""
-
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from .vector_store import VectorStore
 import numpy as np
@@ -31,24 +26,21 @@ class AdvancedRetriever:
         """
         logger.info("Initializing AdvancedRetriever with reranking...")
         
-        # Load embedding model (for dense retrieval)
         logger.info(f"Loading embedding model: {embedding_model}")
         self.encoder = SentenceTransformer(embedding_model)
         self.embedding_model_name = embedding_model
         
-        # Load cross-encoder (for reranking)
         logger.info(f"Loading reranker model: {reranker_model}")
         self.reranker = CrossEncoder(reranker_model)
         self.reranker_model_name = reranker_model
         
-        # Connect to vector store
         logger.info(f"Connecting to vector store: {vector_store_dir}")
         self.vector_store = VectorStore(
             collection_name=collection_name,
             persist_directory=vector_store_dir
         )
         
-        logger.info("✅ AdvancedRetriever initialized with reranking!")
+        logger.info(" AdvancedRetriever initialized with reranking!")
     
     def retrieve(self, 
                 query: str, 
@@ -68,7 +60,6 @@ class AdvancedRetriever:
         logger.info(f"Advanced retrieval for: {query[:60]}...")
         logger.info(f"Retrieving top-{rerank_top_n} candidates for reranking...")
         
-        # Stage 1: Dense retrieval (get more candidates than needed)
         query_embedding = self.encoder.encode(query, normalize_embeddings=True)
         
         results = self.vector_store.query(
@@ -76,42 +67,34 @@ class AdvancedRetriever:
             n_results=rerank_top_n
         )
         
-        # Extract candidates
         candidates = []
         for i in range(len(results['ids'][0])):
             candidates.append({
                 'id': results['ids'][0][i],
                 'document': results['documents'][0][i],
-                'dense_score': 1 - results['distances'][0][i],  # Convert distance to similarity
+                'dense_score': 1 - results['distances'][0][i],  
                 'metadata': results['metadatas'][0][i] if results['metadatas'][0] else {}
             })
         
         logger.info(f"✅ Retrieved {len(candidates)} candidates")
         
-        # Stage 2: Rerank with cross-encoder
         logger.info(f"Reranking top-{rerank_top_n} candidates...")
         
-        # Create query-document pairs for cross-encoder
         pairs = [[query, doc['document']] for doc in candidates]
         
-        # Get reranking scores
         rerank_scores = self.reranker.predict(pairs)
         
-        # Add rerank scores to candidates
         for i, doc in enumerate(candidates):
             doc['rerank_score'] = float(rerank_scores[i])
             doc['rank_before_rerank'] = i + 1
         
-        # Sort by rerank scores (descending)
         reranked = sorted(candidates, key=lambda x: x['rerank_score'], reverse=True)
         
-        # Take top K
         final_results = reranked[:k]
         
-        # Add final ranking
         for i, doc in enumerate(final_results, 1):
             doc['rank'] = i
-            doc['similarity'] = doc['rerank_score']  # Use rerank score as similarity
+            doc['similarity'] = doc['rerank_score'] 
         
         logger.info(f"✅ Reranked and returning top-{k} documents")
         
@@ -128,10 +111,8 @@ class AdvancedRetriever:
         Returns:
             Comparison results
         """
-        # Get advanced results
         advanced_results = self.retrieve(query, k=k)
         
-        # Get baseline results (just dense)
         query_embedding = self.encoder.encode(query, normalize_embeddings=True)
         baseline_query = self.vector_store.query(query_embedding, n_results=k)
         
@@ -153,20 +134,17 @@ class AdvancedRetriever:
         }
 
 
-# Test advanced retriever
 if __name__ == "__main__":
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     print("\n" + "="*80)
-    print("🧪 TESTING ADVANCED RETRIEVER WITH RERANKING")
+    print(" TESTING ADVANCED RETRIEVER WITH RERANKING")
     print("="*80)
     
-    # Initialize
     retriever = AdvancedRetriever()
     
-    # Test queries
     test_queries = [
         "What is GitLab's approach to sustainability?",
         "How does risk management work?",
@@ -175,13 +153,12 @@ if __name__ == "__main__":
     
     for query in test_queries:
         print(f"\n{'='*80}")
-        print(f"🔍 QUERY: {query}")
+        print(f" QUERY: {query}")
         print('='*80)
         
-        # Compare with baseline
         comparison = retriever.compare_with_baseline(query, k=3)
         
-        print(f"\n📊 ADVANCED RETRIEVAL RESULTS (with reranking):")
+        print(f"\n ADVANCED RETRIEVAL RESULTS (with reranking):")
         print("-"*80)
         
         for doc in comparison['advanced']:
@@ -191,14 +168,14 @@ if __name__ == "__main__":
             print(f"  Rank before rerank: {doc['rank_before_rerank']}")
             print(f"  Preview: {doc['document'][:100]}...")
         
-        print(f"\n🔄 Reranking changed order: {comparison['reranking_changed_order']}")
+        print(f"\n Reranking changed order: {comparison['reranking_changed_order']}")
         
-        input("\n⏸️  Press Enter for next query...")
+        input("\n  Press Enter for next query...")
     
     print("\n" + "="*80)
-    print("✅ ADVANCED RETRIEVER TEST COMPLETE!")
+    print(" ADVANCED RETRIEVER TEST COMPLETE!")
     print("="*80)
-    print("\nℹ️  Cross-encoder reranking improves relevance by scoring")
+    print("\n  Cross-encoder reranking improves relevance by scoring")
     print("   query-document pairs directly, rather than relying only")
     print("   on embedding similarity.")
     print("="*80)

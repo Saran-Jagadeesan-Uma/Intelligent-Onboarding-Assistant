@@ -1,35 +1,19 @@
-# Docker-optimized requirements
-# Optimized for Model Development Pipeline
-
-# Data Processing
 pandas
 numpy
 pyyaml
-
-# Model Development
 sentence-transformers
 chromadb
 faiss-cpu
 rank-bm25
-
-# LLM Integration (Gemini + OpenAI support)
 google-generativeai
 openai
 python-dotenv
-
-# Experiment Tracking
 mlflow
 datasets
-
-# Evaluation Framework
 ragas
 langchain
 langchain-community
-
-# Testing
 pytest
 pytest-cov
 tqdm
-
-# Google Cloud Storage
 google-cloud-storage

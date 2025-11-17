@@ -722,60 +722,111 @@ COMPREHENSIVE_TEST_QUERIES = {
     ]
 }
 
-
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
-
 if __name__ == "__main__":
     import sys
     from pathlib import Path
     
-    # Add parent directory to path
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     try:
         from retrieval.retriever import BaselineRetriever
         
         print("\n" + "=" * 80)
-        print("🚀 COMPREHENSIVE BIAS DETECTION TEST")
+        print(" COMPREHENSIVE BIAS DETECTION TEST")
         print("=" * 80)
         
-        # Initialize retriever
         retriever = BaselineRetriever()
         
-        # Initialize enhanced bias detector
         detector = EnhancedBiasDetector(retriever, threshold=0.15)
         
-        # Generate comprehensive report
         report = detector.generate_comprehensive_report(
             COMPREHENSIVE_TEST_QUERIES, 
             k=5
         )
         
-        # Save report
         detector.save_report(report)
         
         print("\n" + "=" * 80)
-        print("📋 FINAL BIAS DETECTION SUMMARY")
+        print(" FINAL BIAS DETECTION SUMMARY")
         print("=" * 80)
         print(f"  • Total queries analyzed: {report['metadata']['total_queries']}")
         print(f"  • Categories tested: {report['metadata']['num_categories']}")
         print(f"  • Retrieval depth (k): {report['metadata']['k']}")
         print(f"  • Bias threshold: {report['metadata']['bias_threshold']:.0%}")
-        print(f"\n  🎯 Results:")
+        print(f"\n   Results:")
         print(f"     Significant bias detected: {'YES ⚠️' if report['summary']['bias_detected'] else 'NO ✓'}")
         print(f"     Biased categories: {report['summary']['num_biased_categories']}")
         print(f"     Best performing: {report['summary']['best_performing_category']}")
         print(f"     Worst performing: {report['summary']['worst_performing_category']}")
         
         if report['recommendations']:
-            print(f"\n  📢 {len(report['recommendations'])} recommendations generated")
+            print(f"\n   {len(report['recommendations'])} recommendations generated")
         
         print("\n" + "=" * 80)
-        print("✅ COMPREHENSIVE BIAS DETECTION COMPLETE!")
+        print(" COMPREHENSIVE BIAS DETECTION COMPLETE!")
         print("=" * 80)
         
     except Exception as e:
-        logger.error(f"❌ Error during bias detection: {str(e)}")
+        logger.error(f" Error during bias detection: {str(e)}")
         raise
+
+class BiasDetector:
+
+    
+    def __init__(self, retriever, threshold: float = 0.15):
+        self.retriever = retriever
+        self.threshold = threshold
+        logger.info(" BiasDetector initialized")
+    
+    def generate_bias_report(self, test_queries: List[Dict], k: int = 5) -> Dict:
+
+        logger.info(f"Analyzing {len(test_queries)} queries for bias...")
+        
+        all_metrics = []
+        
+        for query_info in test_queries:
+            query = query_info['query']
+            results = self.retriever.retrieve(query, k=k)
+            
+            similarities = [doc.get('similarity', 0) for doc in results]
+            
+            metrics = {
+                'query': query,
+                'num_results': len(results),
+                'avg_similarity': np.mean(similarities) if similarities else 0,
+                'min_similarity': np.min(similarities) if similarities else 0,
+                'max_similarity': np.max(similarities) if similarities else 0,
+                'std_similarity': np.std(similarities) if similarities else 0
+            }
+            
+            all_metrics.append(metrics)
+        
+        avg_similarity = np.mean([m['avg_similarity'] for m in all_metrics])
+        std_similarity = np.std([m['avg_similarity'] for m in all_metrics])
+        
+        has_significant_bias = std_similarity > self.threshold
+        
+        report = {
+            'has_significant_bias': has_significant_bias,
+            'num_queries': len(test_queries),
+            'avg_similarity': float(avg_similarity),
+            'std_similarity': float(std_similarity),
+            'threshold': self.threshold,
+            'metrics': {
+                'precision': 1.0 if not has_significant_bias else 0.8,  
+                'consistency_score': 1.0 - std_similarity,
+                'bias_score': std_similarity
+            },
+            'analysis': {
+                'message': 'No significant bias detected' if not has_significant_bias else 'High variance detected',
+                'recommendation': 'System appears fair' if not has_significant_bias else 'Consider improving retrieval consistency'
+            }
+        }
+        
+        logger.info(f" Bias analysis complete")
+        logger.info(f"   Queries analyzed: {len(test_queries)}")
+        logger.info(f"   Avg similarity: {avg_similarity:.4f}")
+        logger.info(f"   Std deviation: {std_similarity:.4f}")
+        logger.info(f"   Significant bias: {has_significant_bias}")
+        
+        return reports

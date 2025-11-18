@@ -3,11 +3,13 @@ import os
 import sys
 from pathlib import Path
 import warnings
+import numpy as np
 warnings.filterwarnings('ignore')
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from src.generation.rag_pipeline import UniversalRAGPipeline
+from src.retrieval.vector_store import VectorStore
 
 st.set_page_config(
     page_title="GitLab Onboarding Assistant",
@@ -92,10 +94,38 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'total_queries' not in st.session_state:
     st.session_state.total_queries = 0
+if 'system_stats' not in st.session_state:
+    st.session_state.system_stats = None
 
 def initialize_pipeline():
-    """Initialize RAG pipeline with Gemini"""
     return UniversalRAGPipeline(provider="gemini")
+
+def get_system_stats():
+    try:
+        vector_store = VectorStore(
+            collection_name="gitlab_onboarding",
+            persist_directory="models/vector_store"
+        )
+        doc_count = vector_store.collection.count()
+        
+        embeddings_path = Path("models/embeddings/embeddings.npy")
+        if embeddings_path.exists():
+            embeddings = np.load(embeddings_path)
+            embedding_dim = embeddings.shape[1]
+        else:
+            embedding_dim = "Unknown"
+        
+        return {
+            'documents': doc_count,
+            'dimensions': embedding_dim,
+            'cost': 'FREE'
+        }
+    except Exception as e:
+        return {
+            'documents': 'Error',
+            'dimensions': 'Error',
+            'cost': 'FREE'
+        }
 
 with st.sidebar:
     st.image("https://about.gitlab.com/images/press/logo/png/gitlab-logo-gray-rgb.png", width=200)
@@ -144,16 +174,17 @@ with st.sidebar:
     
     st.markdown("### 💡 Example Questions")
     examples = [
-        "What is GitLab's sustainability approach?",
-        "How does risk management work?",
-        "Tell me about legal compliance",
-        "What is the Privacy Team's role?",
-        "Explain corporate sustainability"
+        "How does GitLab conduct user research?",
+        "What is the CI/CD catalog?",
+        "How do teams handle design reviews?",
+        "What are GitLab's collaboration practices?",
+        "How is AI being integrated at GitLab?"
     ]
     
     for example in examples:
         if st.button(example, key=f"example_{example}", use_container_width=True):
             st.session_state.current_query = example
+            st.rerun()
     
     st.markdown("---")
     
@@ -164,7 +195,7 @@ with st.sidebar:
     
     st.markdown("---")
     st.caption("Built with ❤️ by Team 13")
-    st.caption("Powered by Gemini 2.0")
+    st.caption("Powered by Gemini 2.0 Flash")
 
 st.title("🚀 GitLab Onboarding Assistant")
 st.markdown("### Ask me anything about GitLab's policies, processes, and culture!")
@@ -172,17 +203,21 @@ st.markdown("### Ask me anything about GitLab's policies, processes, and culture
 if st.session_state.rag_pipeline is None:
     with st.spinner("🔄 Loading RAG pipeline..."):
         st.session_state.rag_pipeline = initialize_pipeline()
+        st.session_state.system_stats = get_system_stats()
     st.success("✅ Pipeline loaded! Ready for questions.")
+
+if 'current_query' not in st.session_state:
+    st.session_state.current_query = None
 
 query_input = st.text_input(
     "Your Question:",
-    placeholder="e.g., What is GitLab's approach to sustainability?",
+    value=st.session_state.current_query if st.session_state.current_query else "",
+    placeholder="e.g., How does GitLab conduct user research?",
     key="query_input",
     label_visibility="collapsed"
 )
 
-if 'current_query' in st.session_state and st.session_state.current_query:
-    query_input = st.session_state.current_query
+if st.session_state.current_query:
     st.session_state.current_query = None
 
 col1, col2, col3 = st.columns([3, 1, 3])
@@ -193,8 +228,8 @@ with col2:
 if search_button and query_input:
     st.session_state.total_queries += 1
     
-    with st.spinner("🤔 Thinking..."):
-        result = st.session_state.rag_pipeline.generate_answer(query_input, k=3)
+    with st.spinner("🤔 Searching knowledge base..."):
+        result = st.session_state.rag_pipeline.generate_answer(query_input, k=5)
         
         st.session_state.chat_history.insert(0, result)
     
@@ -211,17 +246,23 @@ if search_button and query_input:
     
     for i, doc in enumerate(result['sources'], 1):
         title = doc['metadata'].get('title', 'Untitled')
-        score = doc.get('rerank_score', doc.get('similarity', 0))
-        text = doc['document']
+        score = doc.get('rerank_score', doc.get('similarity', doc.get('distance', 0)))
+        text = doc.get('document', doc.get('text', ''))
+        
+        similarity_pct = (1 - doc.get('distance', 1)) * 100 if 'distance' in doc else score * 100
         
         with st.expander(f"📄 Source {i}: {title} (Relevance: {score:.2f})"):
-            st.markdown(f"**Rerank Score:** {score:.4f}")
+            st.markdown(f"**Similarity:** {similarity_pct:.1f}%")
+            
+            if 'rerank_score' in doc:
+                st.markdown(f"**Rerank Score:** {doc['rerank_score']:.4f}")
             
             if doc.get('rank_before_rerank'):
-                st.markdown(f"**Rank Before Rerank:** {doc['rank_before_rerank']}")
+                st.markdown(f"**Original Rank:** {doc['rank_before_rerank']}")
             
-            st.markdown("**Content:**")
-            st.text_area("Source Content", text, height=200, key=f"source_{i}_{st.session_state.total_queries}", disabled=True, label_visibility="collapsed")
+            st.markdown("**Content Preview:**")
+            preview = text[:500] + "..." if len(text) > 500 else text
+            st.text_area("Source Content", preview, height=200, key=f"source_{i}_{st.session_state.total_queries}", disabled=True, label_visibility="collapsed")
 
 elif search_button:
     st.warning("⚠️ Please enter a question!")
@@ -232,32 +273,46 @@ if st.session_state.chat_history:
     
     for i, item in enumerate(st.session_state.chat_history[:5], 1):
         with st.expander(f"{i}. {item['query']}", expanded=(i == 1)):
-            st.markdown(f"**Answer:** {item['answer']}")
+            st.markdown(f"**Answer:** {item['answer'][:300]}{'...' if len(item['answer']) > 300 else ''}")
             st.caption(f"Sources: {item['num_sources']} | Provider: {item.get('provider', 'N/A')} | Model: {item.get('model', 'N/A')}")
 
 st.markdown("---")
+
+if st.session_state.system_stats is None:
+    st.session_state.system_stats = get_system_stats()
+
+stats = st.session_state.system_stats
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("""
+    st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value">19</div>
+        <div class="metric-value">{stats['documents']}</div>
         <div class="metric-label">Documents Indexed</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("""
+    st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value">384</div>
+        <div class="metric-value">{stats['dimensions']}</div>
         <div class="metric-label">Embedding Dimensions</div>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
-    st.markdown("""
+    st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-value">FREE</div>
+        <div class="metric-value">{stats['cost']}</div>
         <div class="metric-label">Cost per Query</div>
     </div>
     """, unsafe_allow_html=True)
+
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #888; font-size: 0.8em;">
+    <p>💡 Tip: Click on sources to see the full context used to generate answers</p>
+    <p>🔄 System automatically uses advanced retrieval with reranking for better accuracy</p>
+</div>
+""", unsafe_allow_html=True)

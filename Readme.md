@@ -77,7 +77,7 @@ Intelligent-Onboarding-Assistant/
 ├── tests/                         # Unit tests
 ├── app.py                         # Streamlit web UI
 ├── demo.py                        # Interactive CLI demo
-├── test_comprehensive.py          # Full pipeline test
+├── test_pipeline.py          # Full pipeline test
 ├── Dockerfile                     # Container config
 ├── docker-compose.yml             # Orchestration
 ├── requirements.txt               # Python dependencies
@@ -118,7 +118,7 @@ echo "GOOGLE_API_KEY=your-key-here" > .env
 
 4. **Run comprehensive test**
 ```bash
-python test_comprehensive.py
+python test_pipeline.py
 ```
 
 **Expected:** `🎉 ALL TESTS PASSED! PIPELINE 100% COMPLETE!`
@@ -474,7 +474,7 @@ python -m mlflow ui --backend-store-uri file:./experiments/mlruns
 
 | Task | Command |
 |------|---------|
-| **Full pipeline test** | `python test_comprehensive.py` |
+| **Full pipeline test** | `python test_pipeline.py` |
 | **Generate embeddings** | `python -m src.embeddings.generate_embeddings` |
 | **Build vector store** | `python -m src.retrieval.vector_store` |
 | **Test retrieval** | `python -m src.retrieval.advanced_retriever` |

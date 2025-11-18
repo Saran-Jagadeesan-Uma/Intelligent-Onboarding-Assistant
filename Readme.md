@@ -13,7 +13,7 @@ A production-ready RAG (Retrieval-Augmented Generation) system for GitLab onboar
 - 🔬 **Experiment Tracking**: MLflow integration for full reproducibility
 - ⚖️ **Bias Detection**: Fairness analysis across data slices with reporting
 - 🎨 **Beautiful Web UI**: Streamlit interface for interactive Q&A
-- 🐳 **Docker Ready**: Containerized deployment (11/12 tests passing)
+- 🐳 **Docker Ready**: Containerized deployment (12/12 tests passing)
 - 🔄 **CI/CD Automated**: GitHub Actions workflows
 
 ## 🏗️ Architecture

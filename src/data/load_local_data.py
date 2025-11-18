@@ -85,160 +85,103 @@ class LocalDataLoader:
     def load_handbook_data(self) -> List[Dict]:
         """
         Load handbook data from available sources.
-        Priority order:
-        1. debiased_data/handbook_paragraphs_debiased.json (best quality)
-        2. handbook_paragraphs.json (root level)
-        3. debiased_data/ folder (all files)
-        4. Other fallback locations
+        Now loads BOTH debiased handbook AND root handbook_paragraphs.json
         
         Returns:
             List of handbook chunks
         """
         logger.info("📚 Loading handbook data...")
         
-        # PRIORITY 1: Debiased handbook (best quality)
+        all_handbook_chunks = []
+        
+        # Load debiased handbook (primary source)
         debiased_handbook = self.data_dir / 'debiased_data' / 'handbook_paragraphs_debiased.json'
         if debiased_handbook.exists():
-            logger.info(f"   Using: debiased_data/handbook_paragraphs_debiased.json")
+            logger.info(f"   Loading: debiased_data/handbook_paragraphs_debiased.json")
             chunks = self.load_json_file(debiased_handbook)
-            if chunks:
-                logger.info(f"✅ Loaded {len(chunks)} chunks from debiased handbook")
-                return chunks
+            all_handbook_chunks.extend(chunks)
+            logger.info(f"   ✅ Added {len(chunks)} chunks from debiased handbook")
         
-        # PRIORITY 2: Root level handbook file
+        # ALSO load root handbook_paragraphs.json (additional website data)
         root_handbook = self.data_dir / 'handbook_paragraphs.json'
         if root_handbook.exists():
-            logger.info(f"   Using: handbook_paragraphs.json")
+            logger.info(f"   Loading: handbook_paragraphs.json (additional data)")
             chunks = self.load_json_file(root_handbook)
-            if chunks:
-                logger.info(f"✅ Loaded {len(chunks)} chunks from root handbook")
-                return chunks
+            all_handbook_chunks.extend(chunks)
+            logger.info(f"   ✅ Added {len(chunks)} chunks from root handbook")
         
-        # PRIORITY 3: All files in debiased_data folder
-        debiased_folder = self.data_dir / 'debiased_data'
-        if debiased_folder.exists() and debiased_folder.is_dir():
-            logger.info(f"   Using: debiased_data/ folder")
-            chunks = self.load_from_folder('debiased_data')
-            if chunks:
-                return chunks
+        # If neither exists, try folder-based loading
+        if not all_handbook_chunks:
+            debiased_folder = self.data_dir / 'debiased_data'
+            if debiased_folder.exists() and debiased_folder.is_dir():
+                logger.info(f"   Trying: debiased_data/ folder")
+                chunks = self.load_from_folder('debiased_data')
+                all_handbook_chunks.extend(chunks)
         
-        # FALLBACK: Other possible locations
-        for folder_name in ['handbook_paragraphs', 'handbook', 'processed']:
-            folder_path = self.data_dir / folder_name
-            if folder_path.exists() and folder_path.is_dir():
-                logger.info(f"   Trying fallback: {folder_name}/")
-                chunks = self.load_from_folder(folder_name)
-                if chunks:
-                    return chunks
-        
-        logger.warning("⚠️ No handbook data found!")
-        return []
+        logger.info(f"✅ Total handbook chunks: {len(all_handbook_chunks)}")
+        return all_handbook_chunks
     
     def load_transcript_data(self) -> List[Dict]:
         """
-        Load meeting transcript data.
-        Priority order:
-        1. debiased_data/all_transcripts_debiased.json (best quality)
-        2. meeting_transcripts/all_transcripts.json
-        3. meeting_transcripts/ folder (all files)
+        Load meeting transcript data from all sources.
         
         Returns:
             List of transcript chunks
         """
         logger.info("🎤 Loading meeting transcripts...")
         
-        # PRIORITY 1: Debiased transcripts (best quality)
+        all_transcript_chunks = []
+        
+        # Load debiased transcripts
         debiased_transcripts = self.data_dir / 'debiased_data' / 'all_transcripts_debiased.json'
         if debiased_transcripts.exists():
-            logger.info(f"   Using: debiased_data/all_transcripts_debiased.json")
+            logger.info(f"   Loading: debiased_data/all_transcripts_debiased.json")
             chunks = self.load_json_file(debiased_transcripts)
-            if chunks:
-                logger.info(f"✅ Loaded {len(chunks)} transcript chunks (debiased)")
-                return chunks
+            all_transcript_chunks.extend(chunks)
+            logger.info(f"   ✅ Added {len(chunks)} chunks from debiased transcripts")
         
-        # PRIORITY 2: Original transcripts file
+        # Load original transcripts
         original_transcripts = self.data_dir / 'meeting_transcripts' / 'all_transcripts.json'
         if original_transcripts.exists():
-            logger.info(f"   Using: meeting_transcripts/all_transcripts.json")
+            logger.info(f"   Loading: meeting_transcripts/all_transcripts.json")
             chunks = self.load_json_file(original_transcripts)
-            if chunks:
-                logger.info(f"✅ Loaded {len(chunks)} transcript chunks")
-                return chunks
+            all_transcript_chunks.extend(chunks)
+            logger.info(f"   ✅ Added {len(chunks)} chunks from meeting transcripts")
         
-        # PRIORITY 3: All files in meeting_transcripts folder
-        transcripts_folder = self.data_dir / 'meeting_transcripts'
-        if transcripts_folder.exists() and transcripts_folder.is_dir():
-            logger.info(f"   Using: meeting_transcripts/ folder")
-            return self.load_from_folder('meeting_transcripts')
+        # If no files, try folder-based loading
+        if not all_transcript_chunks:
+            transcripts_folder = self.data_dir / 'meeting_transcripts'
+            if transcripts_folder.exists() and transcripts_folder.is_dir():
+                logger.info(f"   Trying: meeting_transcripts/ folder")
+                chunks = self.load_from_folder('meeting_transcripts')
+                all_transcript_chunks.extend(chunks)
         
-        logger.warning("⚠️ No transcript data found!")
-        return []
+        logger.info(f"✅ Total transcript chunks: {len(all_transcript_chunks)}")
+        return all_transcript_chunks
     
     def load_all_data(self) -> List[Dict]:
         """
-        Load all available data (handbook + transcripts).
-        Uses debiased versions when available for best quality.
+        Load ALL available data (handbook + transcripts + additional sources).
         
         Returns:
             Combined list of all chunks
         """
-        logger.info("="*60)
-        logger.info("📊 Loading all data sources...")
-        logger.info("="*60)
+        logger.info("="*80)
+        logger.info("📊 LOADING ALL DATA SOURCES...")
+        logger.info("="*80)
         
         handbook_chunks = self.load_handbook_data()
         transcript_chunks = self.load_transcript_data()
         
         all_chunks = handbook_chunks + transcript_chunks
         
-        logger.info("="*60)
-        logger.info(f"✅ Total chunks loaded: {len(all_chunks)}")
-        logger.info(f"   - Handbook: {len(handbook_chunks)} chunks")
-        logger.info(f"   - Transcripts: {len(transcript_chunks)} chunks")
-        logger.info("="*60)
+        logger.info("="*80)
+        logger.info(f"✅ TOTAL CHUNKS LOADED: {len(all_chunks)}")
+        logger.info(f"   📚 Handbook: {len(handbook_chunks)} chunks")
+        logger.info(f"   🎤 Transcripts: {len(transcript_chunks)} chunks")
+        logger.info("="*80)
         
         return all_chunks
-    
-    def load_debiased_data_only(self) -> List[Dict]:
-        """
-        Load ONLY debiased data (highest quality).
-        Use this for production/final evaluation.
-        
-        Returns:
-            List of debiased chunks
-        """
-        logger.info("🔬 Loading debiased data only...")
-        
-        all_chunks = []
-        
-        # Load debiased handbook
-        debiased_handbook = self.data_dir / 'debiased_data' / 'handbook_paragraphs_debiased.json'
-        if debiased_handbook.exists():
-            chunks = self.load_json_file(debiased_handbook)
-            all_chunks.extend(chunks)
-            logger.info(f"   Handbook: {len(chunks)} chunks")
-        
-        # Load debiased transcripts
-        debiased_transcripts = self.data_dir / 'debiased_data' / 'all_transcripts_debiased.json'
-        if debiased_transcripts.exists():
-            chunks = self.load_json_file(debiased_transcripts)
-            all_chunks.extend(chunks)
-            logger.info(f"   Transcripts: {len(chunks)} chunks")
-        
-        logger.info(f"✅ Total debiased chunks: {len(all_chunks)}")
-        return all_chunks
-    
-    def get_sample_chunk(self) -> Dict:
-        """
-        Get a sample chunk for testing/inspection.
-        
-        Returns:
-            First chunk from the dataset, or empty dict if no data
-        """
-        all_chunks = self.load_all_data()
-        if all_chunks:
-            return all_chunks[0]
-        return {}
     
     def get_data_stats(self) -> Dict:
         """
@@ -288,16 +231,9 @@ if __name__ == "__main__":
     loader = LocalDataLoader(data_dir="data")
     
     # Load all data
-    print("\n🔹 OPTION 1: Load ALL available data")
+    print("\n🔹 Loading ALL available data...")
     print("-"*80)
     chunks = loader.load_all_data()
-    print(f"Total chunks: {len(chunks)}")
-    
-    # Load only debiased data
-    print("\n🔹 OPTION 2: Load ONLY debiased data")
-    print("-"*80)
-    debiased_chunks = loader.load_debiased_data_only()
-    print(f"Total debiased chunks: {len(debiased_chunks)}")
     
     if chunks:
         # Display sample chunk

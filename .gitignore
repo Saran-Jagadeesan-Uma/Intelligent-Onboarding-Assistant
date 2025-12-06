@@ -1,5 +1,13 @@
 
 /gcp_keys
+/gcp
+/credentials
+credentials/
+*.json
+!config/*.json
+!package.json
+!package-lock.json
+!tsconfig.json
 
 # Log files
 logs/
